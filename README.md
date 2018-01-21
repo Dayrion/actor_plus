@@ -5,12 +5,12 @@ Functions returning 1 on success, 0 on failure or cellmin for specific failure. 
 ## Documentation
 ### Constant
 * `MULTIPLE_TARGET_FOUND`: Returned by `GetNearestActorForPlayer` or `GetNearestActorByCoord` when multiple actors are found. **It cannot be redefined**.
-* `DEFAULT_ACTOR_VALUE` : Using this one instead of any other value result taking the value from the actor. It cannot be redefined
-* `DEFAULT_CHECKING_TIME` : Used to detect OnPlayerTargetActor. It cannot be redefined.
+* `DEFAULT_ACTOR_VALUE` : Using this one instead of any other value result taking the value from the actor. **It cannot be redefined**.
+* `DEFAULT_CHECKING_TIME` : Used to detect OnPlayerTargetActor. **It cannot be redefined**.
 
-* `DEFAULT_ACTOR_DRAW_DISTANCE` : Distance that far a label can be displayed. It can be redefined
-* `MAX_ACTOR_LABEL_LENGTH` : Max length for a text in a label. It can be redefined
-* `DEFAULT_ACTOR_COLOR` : Default color for the name. It can be redefined
+* `DEFAULT_ACTOR_DRAW_DISTANCE` : Distance that far a label can be displayed. **It can be redefined**.
+* `MAX_ACTOR_LABEL_LENGTH` : Max length for a text in a label. **It can be redefined**.
+* `DEFAULT_ACTOR_COLOR` : Default color for the name. **It can be redefined**.
 
 ### Functions - Using streamer
 ```pawn
@@ -33,7 +33,7 @@ RespawnActor(actorid);
 SetActorName(actorid, actor_name[], bool:display, bool:contain_id = false, bool:reformat_label = false);
 GetActorName(actorid, actor_name[], length = sizeof(actor_name));
 GetActorTextLabel(actorid, text[], length = sizeof(text));
-Attach3DTextLabelToActor(actorid, const text[], color, Float:OffsetX, Float:OffsetY, Float:OffsetZ, Float:drawdistance, virtualworld = DEFAULT_ACTOR_VALUE, testlos = 0, bool:store_string = true)
+Attach3DTextLabelToActor(actorid, const text[], color, Float:OffsetX, Float:OffsetY, Float:OffsetZ, Float:drawdistance, virtualworld = DEFAULT_ACTOR_VALUE, testlos = 0, bool:store_string = true);
 ActorHasAttachedLabel(actorid, &bool:name_displayed = false, &bool:text_displayed = false);
 UpdateAttachedActor3DTextLabel(actorid, text[], color);
 SetActorChatBubble(actorid, const text[], color, Float:drawdistance, expiretime);
