@@ -6,13 +6,13 @@ Functions returning 1 on success, 0 on failure or cellmin for specific failure. 
 ### Constant
 #### Can not be redefined
 * `MULTIPLE_TARGET_FOUND`: Returned by `GetNearestActorForPlayer` or `GetNearestActorByCoord` when multiple actors are found.
-* `DEFAULT_ACTOR_VALUE` : Using this one instead of any other value result taking the value from the actor.
-* `DEFAULT_CHECKING_TIME` : Used to detect OnPlayerTargetActor.
+* `DEFAULT_ACTOR_VALUE`: Using this one instead of any other value result taking the value from the actor.
+* `DEFAULT_CHECKING_TIME`: Used to detect `OnPlayerTargetActor`.
 
 #### Can be redefined
-* `DEFAULT_ACTOR_DRAW_DISTANCE` : Distance that far a label can be displayed.
-* `MAX_ACTOR_LABEL_LENGTH` : Max length for a text in a label.
-* `DEFAULT_ACTOR_COLOR` : Default color for the name.
+* `DEFAULT_ACTOR_DRAW_DISTANCE`: Distance that label is displayed.
+* `MAX_ACTOR_LABEL_LENGTH`: Max length for a text in a label.
+* `DEFAULT_ACTOR_COLOR`: Default color for the name.
 
 ### Functions - Using streamer
 ```pawn
