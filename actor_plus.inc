@@ -3,7 +3,7 @@
 
 		Include started at 19/01/18.
 		-Dayrion
-		Public version - beta v1.1.01
+		Public version - beta v1.2.00
 */
 
 
@@ -49,7 +49,7 @@
 // =====================================================================================
 
 #define S->%1(%0) 	stock %1(%0)
-#define actor_plus_version 0x10101b
+#define actor_plus_version 0x10200b
 
 // =====================================================================================
 
@@ -448,7 +448,7 @@ public OnPlayerGiveDamageActor(playerid, damaged_actorid, Float:amount, weaponid
 				Actors_Flags[damaged_actorid][STATIC_CATEGORY] |= IS_DEAD;
 			}
 
-			SetDynamicActorHealth(damaged_actorid, Static_Actors[damaged_actorid][eapHealth]);
+			SetActorHealth(damaged_actorid, Static_Actors[damaged_actorid][eapHealth]);
 		#endif
 
 		#if defined OnActorDeath
@@ -1050,7 +1050,7 @@ S->SetActorChatBubble(actorid, text[], color, Float:drawdistance, expiretime)
 			return 0;
 
 		if(Static_Actors[actorid][eapLabel] == Text3D:INVALID_3DTEXT_ID)
-			Attach3DTextLabelToActor(actorid, text, color, 0.0, 0.0, 1.0, drawdistance, .store_string = false)
+			Attach3DTextLabelToActor(actorid, text, color, 0.0, 0.0, 1.0, drawdistance, .store_string = false);
 		else
 			Update3DTextLabelText(Static_Actors[actorid][eapLabel], color, text);
 		
@@ -1478,6 +1478,70 @@ S->IsActorDead(actorid)
 		if(!AP_IsValidActor(actorid, isdynamic))
 			return 0;
 		return (Actors_Flags[actorid][isdynamic] & IS_DEAD) == IS_DEAD;
+	#endif
+}
+
+// =======================================================================================================================================================================================
+// =======================================================================================================================================================================================
+
+#if !defined GetActorSkin
+	#if USING_STREAMER
+	S->GetActorSkin(actorid, bool:isdynamic = true)
+	#else
+	S->GetActorSkin(actorid)
+	#endif
+	{
+		#if !USING_STREAMER
+			if(!AP_IsValidActor(actorid))
+				return 0;
+			return Static_Actors[actorid][eapSkin];
+		#else
+			if(!AP_IsValidActor(actorid, isdynamic))
+				return 0;
+			if(isdynamic)
+				return Dynamic_Actors[actorid][eapSkin];
+			else
+				return Static_Actors[actorid][eapSkin];
+		#endif
+	}
+#endif
+
+// =======================================================================================================================================================================================
+// =======================================================================================================================================================================================
+
+#if USING_STREAMER
+	S->GetDynamicActorInterior(actorid)
+	{
+		if(!IsValidDynamicActor(actorid))
+			return 0;
+		return Dynamic_Actors[actorid][eapInt];
+	}
+
+	S->SetDynamicActorInterior(actorid, interiorid)
+	{
+		if(!IsValidDynamicActor(actorid))
+			return 0;
+		Dynamic_Actors[actorid][eapInt] = interiorid;
+		return RecreateActor(actorid);
+	}
+#endif
+
+// =======================================================================================================================================================================================
+// =======================================================================================================================================================================================
+
+#if USING_STREAMER
+S->Float:GetActorDistanceFromPoint(actorid, Float:x, Float:y, Float:z, bool:isdynamic = true)
+#else
+S->Float:GetActorDistanceFromPoint(actorid, Float:x, Float:y, Float:z)
+#endif
+{
+	#if !USING_STREAMER
+		return (GetDistanceBetween2Points(x, y, z, Static_Actors[actorid][eapPosX], Static_Actors[actorid][eapPosY], Static_Actors[actorid][eapPosZ]));
+	#else
+		if(isdynamic)
+			return (GetDistanceBetween2Points(x, y, z, Dynamic_Actors[actorid][eapPosX], Dynamic_Actors[actorid][eapPosY], Dynamic_Actors[actorid][eapPosZ]));
+		else
+			return (GetDistanceBetween2Points(x, y, z, Static_Actors[actorid][eapPosX], Static_Actors[actorid][eapPosY], Static_Actors[actorid][eapPosZ]));
 	#endif
 }
 
