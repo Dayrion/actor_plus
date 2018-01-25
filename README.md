@@ -8,6 +8,7 @@ Functions returning 1 on success, 0 on failure or cellmin for specific failure. 
 * `MULTIPLE_TARGET_FOUND`: Returned by `GetNearestActorForPlayer` or `GetNearestActorByCoord` when multiple actors are found.
 * `DEFAULT_ACTOR_VALUE`: Using this one instead of any other value result taking the value from the actor.
 * `DEFAULT_CHECKING_TIME`: Used to detect `OnPlayerTargetActor`.
+* `ALL_VALUES_INCLUDED`: It's basically -1. Used with `GetDynamicActorInterior`. If `ALL_VALUES_INCLUDED` is returned by a function, it means it include every postive values (like interior or virtual world).
 
 #### Can be redefined
 * `DEFAULT_ACTOR_DRAW_DISTANCE`: Distance that label is displayed.
@@ -28,6 +29,8 @@ native DestroyActor3DTextLabel(actorid, bool:isdynamic = true);
 native ToggleActorName(actorid, bool:toggle, bool:isdynamic = true);
 native SetActorSkin(actorid, skinid, bool:isdynamic = true);
 native IsActorDead(actorid, bool:isdynamic = true);
+native GetDynamicActorInterior(actorid);
+native GetActorSkin(actorid, bool:isdynamic = true);
 ```
 
 ### Functions - Not using streamer
@@ -44,6 +47,7 @@ native DestroyActor3DTextLabel(actorid);
 native ToggleActorName(actorid, bool:toggle);
 native SetActorSkin(actorid, skinid);
 native IsActorDead(actorid);
+native GetActorSkin(actorid);
 ```
 
 ### Other functions (independent of streamer)

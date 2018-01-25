@@ -3,7 +3,7 @@
 
 		Include started at 19/01/18.
 		-Dayrion
-		Public version - beta v1.1
+		Public version - beta v1.1.01
 */
 
 
@@ -49,7 +49,7 @@
 // =====================================================================================
 
 #define S->%1(%0) 	stock %1(%0)
-#define actor_plus_version 0x11b
+#define actor_plus_version 0x10101b
 
 // =====================================================================================
 
