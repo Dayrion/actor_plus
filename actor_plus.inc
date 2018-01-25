@@ -57,6 +57,14 @@
 	#define GetDistanceBetween2Points(%0,%1,%2,%3,%4,%5) VectorSize(%0-%3, %1-%4, %2-%5)
 #endif
 
+#if !defined strcpy
+	#define strcpy(%0,%1) strcat((%0[0] = EOS, %0), %1)
+#endif
+
+#if !defined isnull
+	#define isnull(%1) ((!(%1[0])) || (((%1[0]) == '\1') && (!(%1[1]))))
+#endif
+
 // =====================================================================================
 
 enum _:E_TYPE_SEARCH(<<= 1)
@@ -75,8 +83,10 @@ enum _:E_TYPE_SEARCH(<<= 1)
 	#define DEFAULT_CHECKING_TIME 	(200)
 #endif
 
-#define DYNAMIC_CATEGORY		(1)
-#define STATIC_CATEGORY			(0)
+#define DYNAMIC_CATEGORY			(1)
+#define STATIC_CATEGORY				(0)
+#define ALL_VALUES_INCLUDED			(-1)
+#define DEFAULT_ACTOR_REPLACEMENT 	(300)
 
 #if !defined DEFAULT_ACTOR_DRAW_DISTANCE
 	#define DEFAULT_ACTOR_DRAW_DISTANCE (13.0)
@@ -1841,8 +1851,31 @@ stock AP_SetActorInvulnerable(actorid, invulnerable = true)
 		Actors_Flags[actorid][STATIC_CATEGORY] |= IS_INVULNERABLE;
 	else
 		Actors_Flags[actorid][STATIC_CATEGORY] &= ~IS_INVULNERABLE;
+	SetActorPos(actorid, 999.0, 999.0, 999.0);
+	#if USING_Y_TIMERS
+		defer AP_ReplaceActor(actorid);
+	#else
+		SetTimerEx("@AP_ReplaceActor", DEFAULT_ACTOR_REPLACEMENT, 0, "i", actorid);
+	#endif
 	return 1;
 }
+
+#if USING_Y_TIMERS
+	timer AP_ReplaceActor[DEFAULT_ACTOR_REPLACEMENT](actorid)
+	{
+		SetActorPos(actorid, Static_Actors[actorid][eapPosX], Static_Actors[actorid][eapPosY], Static_Actors[actorid][eapPosZ]);
+		SetActorFacingAngle(actorid, Static_Actors[actorid][eapPosAngle]);
+		return 1;
+	}
+#else
+	forward @AP_ReplaceActor(actorid);
+	@AP_ReplaceActor(actorid)
+	{
+		SetActorPos(actorid, Static_Actors[actorid][eapPosX], Static_Actors[actorid][eapPosY], Static_Actors[actorid][eapPosZ]);
+		SetActorFacingAngle(actorid, Static_Actors[actorid][eapPosAngle]);
+		return 1;
+	}
+#endif
 
 #if defined _ALS_SetActorInvulnerable
     #undef SetActorInvulnerable
