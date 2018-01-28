@@ -2,21 +2,24 @@
 An include with a bunch of useful functions and callback for actors.
 Functions returning 1 on success, 0 on failure or cellmin for specific failure. Please, check the wiki for more specific informations.
 
-### *Actual version:* public - beta v1.2.0
+### *Actual version:* public - beta v2.0.0
 
 ## Documentation
 ### Constant
 #### Can not be redefined
-* `MULTIPLE_TARGET_FOUND`: Returned by `GetNearestActorForPlayer` or `GetNearestActorByCoord` when multiple actors are found.
+* `MULTIPLE_TARGET_FOUND`: Returned by `GetNearestActorForPlayer` or `GetNearestActorByCoord` when multiple actors are found and when `return_multiple_target` is set to `true`.
 * `DEFAULT_ACTOR_VALUE`: Using this one instead of any other value result taking the value from the actor.
 * `DEFAULT_CHECKING_TIME`: Used to detect `OnPlayerTargetActor`.
 * `ALL_VALUES_INCLUDED`: If `ALL_VALUES_INCLUDED` is returned by a function, it means it will appear at every stage (like interior or virtual world).
 * `DEFAULT_ACTOR_REPLACEMENT`: Time before an actor is being re-placed at his old position.
+* `AP_DEBUG_ENABLED`: If some debugs printed messages are needed.
+* `MAX_ANIMATION_LIBRARY_LENGTH`: Maximum animation library length name.
+* `MAX_ANIMATION_NAME_LENGTH`: Maximum animation length name (need to be modified).
 
 #### Can be redefined
 * `DEFAULT_ACTOR_DRAW_DISTANCE`: Distance that label is displayed.
 * `MAX_ACTOR_LABEL_LENGTH`: Max length for a text in a label.
-* `DEFAULT_ACTOR_COLOR`: Default color name.
+* `DEFAULT_ACTOR_COLOR`: Default actor color name.
 
 ### Functions - Using streamer
 ```pawn
@@ -38,6 +41,7 @@ native GetActorSkin(actorid, bool:isdynamic = true);
 // In addition to the streamer
 native GetDynamicActorInterior(actorid);
 native SetDynamicActorInterior(actorid, interiorid);
+native GetRealActorID(actorid);
 ```
 
 ### Functions - Not using streamer
@@ -57,10 +61,19 @@ native IsActorDead(actorid);
 native GetActorSkin(actorid);
 ```
 
+### Per-players functions
+```pawn
+native HideActorForPlayer(playerid, actorid, hide_type, bool:isdynamic = true);
+native BringBackActorForPlayer(playerid, actorid, bool:isdynamic = true);
+```
+### Hide type
+* `HIDE_TYPE_ONE_TIME`: The actor will be hidden one time and reappear when it be streamed.
+* `HIDE_TYPE_PERMANENT`: The actor will be hidden until the script make it come back even if the player re-stream the actor.
+
 ### Other functions (independent of streamer)
 ```pawn
 GetNearestActorForPlayer(playerid, Float:range = 2.0, &bool:IsDynamic = false, type = SEARCH_TYPE_ALL);
-GetNearestActorByCoord(Float:x, Float:y, Float:z, Float:range = 2.0, &bool:IsDynamic = false, type = SEARCH_TYPE_ALL);
+GetNearestActorByCoord(Float:x, Float:y, Float:z, Float:range = 2.0, &bool:IsDynamic = false, type = SEARCH_TYPE_ALL, bool:return_multiple_target = true);
 ```
 #### Type of research:
 * `SEARCH_TYPE_DYNAMIC`: Search only for dynamics actors
@@ -72,5 +85,5 @@ GetNearestActorByCoord(Float:x, Float:y, Float:z, Float:range = 2.0, &bool:IsDyn
 forward OnPlayerShotActor(playerid, actorid, weaponid, bool:IsDynamicActor);
 forward OnPlayerTargetActor(playerid, actorid, weaponid);
 forward OnPlayerMakeDamageToActor(playerid, damaged_actorid, Float:amount, weaponid, bodypart, bool:IsDynamicActor, bool:death);
-forward OnActorDeath(actorid, killerid, reason, bool:IsDynamicActor);
+forward OnActorSpawn(actorid, bool:IsDynamicActor);
 ```
