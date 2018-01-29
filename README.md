@@ -2,7 +2,7 @@
 An include with a bunch of useful functions and callback for actors.
 Functions returning 1 on success, 0 on failure or cellmin for specific failure. Please, check the wiki for more specific informations.
 
-### *Actual version:* public - beta v2.0.0
+### *Actual version:* public - beta v2.1.10
 
 ## Documentation
 ### Constant
@@ -37,11 +37,9 @@ native SetActorSkin(actorid, skinid, bool:isdynamic = true);
 native IsActorDead(actorid, bool:isdynamic = true);
 native GetActorSkin(actorid, bool:isdynamic = true);
 
-
 // In addition to the streamer
 native GetDynamicActorInterior(actorid);
 native SetDynamicActorInterior(actorid, interiorid);
-native GetRealActorID(actorid);
 ```
 
 ### Functions - Not using streamer
@@ -61,16 +59,7 @@ native IsActorDead(actorid);
 native GetActorSkin(actorid);
 ```
 
-### Per-players functions
-```pawn
-native HideActorForPlayer(playerid, actorid, hide_type, bool:isdynamic = true);
-native BringBackActorForPlayer(playerid, actorid, bool:isdynamic = true);
-```
-### Hide type
-* `HIDE_TYPE_ONE_TIME`: The actor will be hidden one time and reappear when it be streamed.
-* `HIDE_TYPE_PERMANENT`: The actor will be hidden until the script make it come back even if the player re-stream the actor.
-
-### Other functions (independent of streamer)
+### Other functions (none include needed)
 ```pawn
 GetNearestActorForPlayer(playerid, Float:range = 2.0, &bool:IsDynamic = false, type = SEARCH_TYPE_ALL);
 GetNearestActorByCoord(Float:x, Float:y, Float:z, Float:range = 2.0, &bool:IsDynamic = false, type = SEARCH_TYPE_ALL, bool:return_multiple_target = true);
@@ -80,10 +69,25 @@ GetNearestActorByCoord(Float:x, Float:y, Float:z, Float:range = 2.0, &bool:IsDyn
 * `SEARCH_TYPE_STATIC`: Search only for statics actors
 * `SEARCH_TYPE_ALL`: Search for dynamics **and** statics actors
 
+## Per-players functions (PawnRakNet dependency)
+```pawn
+native HideActorForPlayer(forplayerid, actorid, hide_type, bool:isdynamic = true);
+native BringBackActorForPlayer(forplayerid, actorid, bool:isdynamic = true);
+native SetActorHideTypeForPlayer(forplayerid, actorid, hide_type, bool:isdynamic = true);
+
+// Streamer dependency - Used to get the real internal actor id used by SA-MP
+native GetRealActorID(actorid);
+```
+### Hide type
+* `HIDE_TYPE_NONE`: Default value.
+* `HIDE_TYPE_ONE_TIME`: The actor will be hidden one time and reappear when it be streamed.
+* `HIDE_TYPE_PERMANENT`: The actor will be hidden until the script make it come back even if the player re-stream the actor.
+
 ## Callbacks
 ```pawn
 forward OnPlayerShotActor(playerid, actorid, weaponid, bool:IsDynamicActor);
 forward OnPlayerTargetActor(playerid, actorid, weaponid);
 forward OnPlayerMakeDamageToActor(playerid, damaged_actorid, Float:amount, weaponid, bodypart, bool:IsDynamicActor, bool:death);
 forward OnActorSpawn(actorid, bool:IsDynamicActor);
+forward OnPlayerStreamForActor(forplayerid, actorid, hidden_type, bool:IsDynamicActor);
 ```
