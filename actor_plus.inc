@@ -140,7 +140,7 @@ enum _:E_TYPE_SEARCH(<<= 1)
 #endif
 
 #if defined OnPlayerMakeDamageToActor
-	forward OnPlayerMakeDamageToActor(playerid, damaged_actorid, Float:amount, weaponid, bodypart, bool:IsDynamicActor, bool:death);
+	forward OnPlayerMakeDamageToActor(playerid, damaged_actorid, Float:amount, weaponid, bodypart, bool:death, bool:IsDynamicActor);
 #endif
 
 #if defined OnActorDeath
@@ -217,20 +217,17 @@ enum E_ACTOR_PLUS_FLAGS (<<= 1)
 static
 	Actors_Plus[2][MAX_ACTORS][E_ACTOR_PLUS_DATA],
 	E_ACTOR_PLUS_FLAGS:Actors_Flags[MAX_ACTORS][2],
-	Player_ActorTarget[MAX_PLAYERS] = {INVALID_ACTOR_ID, INVALID_ACTOR_ID, INVALID_ACTOR_ID, ...};
+	Player_ActorTarget[MAX_PLAYERS] = {INVALID_ACTOR_ID, INVALID_ACTOR_ID, INVALID_ACTOR_ID, ...},
+	Internal_ActorsID[MAX_ACTORS][2] = {{INVALID_ACTOR_ID, ALL_VALUES_INCLUDED}, {INVALID_ACTOR_ID, ALL_VALUES_INCLUDED}, ...};
 
 #if USING_Y_ITERATE
 	static
-		Iterator:Static_Actors<MAX_ACTORS>,
-		Iterator:Internal_ActorsID[MAX_ACTORS]<2>;
+		Iterator:Static_Actors<MAX_ACTORS>;
 
 	#if USING_STREAMER
 		static
 			Iterator:Dynamic_Actors<MAX_ACTORS>;
 	#endif
-#else
-	static
-		Internal_ActorsID[MAX_ACTORS][2] = {{INVALID_ACTOR_ID}, {INVALID_ACTOR_ID}, ...};
 #endif
 
 enum _:E_PLAYER_AP_FLAGS(<<= 1)
@@ -445,7 +442,7 @@ S->GetNearestActorByCoord(Float:x, Float:y, Float:z, Float:range = 2.0, &bool:is
 public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
 {
 	if(hittype != BULLET_HIT_TYPE_NONE || (fX == 0.0 && fY == 0.0))
-		return Y_HOOKS_CONTINUE_RETURN_1;
+		return 1;
 
 	new bool:isdynamic,
 		actorid = GetNearestActorByCoord(fX, fY, fZ, 1.0, isdynamic);
@@ -483,16 +480,14 @@ public OnPlayerGiveDamageActor(playerid, damaged_actorid, Float:amount, weaponid
 		Float:fHitPosX, Float:fHitPosY, Float:fHitPosZ;
 
 	GetPlayerLastShotVectors(playerid, fOriginX, fOriginY, fOriginZ, fHitPosX, fHitPosY, fHitPosZ);
-	// APD("STATIC: damaged_actorid: %i by %i with %i", damaged_actorid, playerid, weaponid);
 
 	if(GetNearestActorByCoord(fHitPosX, fHitPosY, fHitPosZ, .type = SEARCH_TYPE_STATIC) == damaged_actorid)
 	{
 		new bool:death = ((Actors_Plus[STATIC_CATEGORY][damaged_actorid][eapHealth] -= amount) <= 0.0);
-		// APD("actorid: %i detect as a valid actor - Static", damaged_actorid);
 		
 		#if defined OnPlayerMakeDamageToActor
 
-			if(!OnPlayerMakeDamageToActor(playerid, damaged_actorid, amount, weaponid, bodypart, false, death))
+			if(!OnPlayerMakeDamageToActor(playerid, damaged_actorid, amount, weaponid, bodypart, death, false))
 			{
 				#if defined AP_OnPlayerGiveDamageActor
 					return AP_OnPlayerGiveDamageActor(playerid, damaged_actorid, amount, weaponid, bodypart);
@@ -552,21 +547,19 @@ public OnPlayerGiveDamageDynamicActor(playerid, STREAMER_TAG_ACTOR actorid, Floa
 		Float:fHitPosX, Float:fHitPosY, Float:fHitPosZ;
 
 	GetPlayerLastShotVectors(playerid, fOriginX, fOriginY, fOriginZ, fHitPosX, fHitPosY, fHitPosZ);
-	// APD("DYNAMIC: actorid: %i by %i with %i", actorid, playerid, weaponid);
 
 	if(GetNearestActorByCoord(fHitPosX, fHitPosY, fHitPosZ, .type = SEARCH_TYPE_DYNAMIC) == actorid)
 	{
 		new bool:death = ((Actors_Plus[DYNAMIC_CATEGORY][actorid][eapHealth] - amount) <= 0.0);
 
-		// APD("actorid: %i detect as a valid actor - DYNAMIC: %i", actorid, isdynamic);
 		#pragma unused death
 
 		#if defined OnPlayerMakeDamageToActor
 
 			if(!OnPlayerMakeDamageToActor(playerid, actorid, amount, weaponid, bodypart, true, death))
 			{
-				#if defined BOnPlayerGiveDamageDynamicActor
-					return BOnPlayerGiveDamageDynamicActor(playerid, actorid, amount, weaponid, bodypart);
+				#if defined OnPlayerGiveDamageDynamicActorA
+					return OnPlayerGiveDamageDynamicActorA(playerid, actorid, amount, weaponid, bodypart);
 				#else
 					return 1;
 				#endif
@@ -588,31 +581,32 @@ public OnPlayerGiveDamageDynamicActor(playerid, STREAMER_TAG_ACTOR actorid, Floa
 				OnActorDeath(actorid, playerid, weaponid, true);
 		#endif
 
-		#if defined BOnPlayerGiveDamageDynamicActor
-			return BOnPlayerGiveDamageDynamicActor(playerid, actorid, amount, weaponid, bodypart);
+		#if defined OnPlayerGiveDamageDynamicActorA
+			return OnPlayerGiveDamageDynamicActorA(playerid, actorid, amount, weaponid, bodypart);
 		#else
 			return 1;
 		#endif
 	}
 
-	#if defined BOnPlayerGiveDamageDynamicActor
-		return BOnPlayerGiveDamageDynamicActor(playerid, actorid, amount, weaponid, bodypart);
+	#if defined OnPlayerGiveDamageDynamicActorA
+		return OnPlayerGiveDamageDynamicActorA(playerid, actorid, amount, weaponid, bodypart);
 	#else
 		return 1;
 	#endif
 }
-#endif // #if USING_STREAMER && (defined OnPlayerMakeDamageToActor || defined OnActorDeath)
 
 
-#if defined AOnPlayerGiveDamageDynamicActor
+#if defined _ALS_OnPlayerGiveDamageDynActor
     #undef OnPlayerGiveDamageDynamicActor
 #else
-    #define AOnPlayerGiveDamageDynamicActor
+    #define _ALS_OnPlayerGiveDamageDynActor
 #endif
-#define OnPlayerGiveDamageDynamicActor BOnPlayerGiveDamageDynamicActor
-#if defined BOnPlayerGiveDamageDynamicActor
-	forward BOnPlayerGiveDamageDynamicActor(playerid, STREAMER_TAG_ACTOR actorid, Float:amount, weaponid, bodypart);
+#define OnPlayerGiveDamageDynamicActor OnPlayerGiveDamageDynamicActorA
+#if defined OnPlayerGiveDamageDynamicActorA
+	forward OnPlayerGiveDamageDynamicActorA(playerid, STREAMER_TAG_ACTOR actorid, Float:amount, weaponid, bodypart);
 #endif
+
+#endif // #if USING_STREAMER && (defined OnPlayerMakeDamageToActor || defined OnActorDeath)
 
 public OnPlayerConnect(playerid)
 {
@@ -691,8 +685,8 @@ public OnPlayerConnect(playerid)
 			public OnFilterScriptInit()
 			{
 				SetTimer("@AP_AimingActor", DEFAULT_CHECKING_TIME, 1);
-				#if defined AUniP_OnFilterScriptInit
-				    return AUniP_OnFilterScriptInit();
+				#if defined AP_OnFilterScriptInit
+				    return AP_OnFilterScriptInit();
 				#else
 				    return 1;
 				#endif
@@ -703,10 +697,10 @@ public OnPlayerConnect(playerid)
 			#else
 			    #define _ALS_OnFilterScriptInit
 			#endif
-			#if defined AUniP_OnFilterScriptInit
-				forward AUniP_OnFilterScriptInit();
+			#if defined AP_OnFilterScriptInit
+				forward AP_OnFilterScriptInit();
 			#endif
-			#define OnFilterScriptInit AUniP_OnFilterScriptInit
+			#define OnFilterScriptInit AP_OnFilterScriptInit
 
 		#endif
 	#else
@@ -792,7 +786,6 @@ S->SetActorName(actorid, actor_name[], bool:display, bool:contain_id = false, bo
 		{
 			new other_string[MAX_PLAYER_NAME + MAX_ACTOR_LABEL_LENGTH];
 			format(other_string, sizeof(other_string), "%s\n{%06x}%s", formatted_name, Actors_Plus[STATIC_CATEGORY][actorid][eapLabelColor], Actors_Plus[STATIC_CATEGORY][actorid][eapLabelText]);
-			// strcpy(Actors_Plus[STATIC_CATEGORY][actorid][eapLabelText], other_string);
 			if(display)
 				Attach3DTextLabelToActor(actorid, other_string, DEFAULT_ACTOR_COLOR, Actors_Plus[STATIC_CATEGORY][actorid][eapLabelPosX], Actors_Plus[STATIC_CATEGORY][actorid][eapLabelPosY], Actors_Plus[STATIC_CATEGORY][actorid][eapLabelPosZ], Actors_Plus[STATIC_CATEGORY][actorid][eapLabelDrawDistance], .store_string = false);
 			
@@ -827,7 +820,6 @@ S->SetActorName(actorid, actor_name[], bool:display, bool:contain_id = false, bo
 		{
 			new other_string[MAX_PLAYER_NAME + MAX_ACTOR_LABEL_LENGTH];
 			format(other_string, sizeof(other_string), "%s\n{%06x}%s", formatted_name, Actors_Plus[isdynamic][actorid][eapLabelColor], Actors_Plus[isdynamic][actorid][eapLabelText]);
-			// strcpy(Actors_Plus[isdynamic][actorid][eapLabelText], other_string);
 			if(display)
 				Attach3DTextLabelToActor(actorid, other_string, isdynamic, DEFAULT_ACTOR_COLOR, Actors_Plus[isdynamic][actorid][eapLabelPosX], Actors_Plus[isdynamic][actorid][eapLabelPosY], Actors_Plus[isdynamic][actorid][eapLabelPosZ], Actors_Plus[isdynamic][actorid][eapLabelDrawDistance], .store_string = false);
 		}
@@ -1539,10 +1531,10 @@ public OnOutcomingRPC(playerid, rpcid, BitStream:bs)
 			Float:z,
 			bool:isdynamic;
 		BS_ReadUint16(bs, actorid);
-		APD("[debug] OnOutcomingRPC- actorid: %i", actorid);
+		printf("[debug] OnOutcomingRPC- actorid: %i", actorid);
 		GetActorPos(actorid, x, y, z);
 		actor_detected = GetNearestActorByCoord(x, y, z, 1.0, isdynamic, .return_multiple_target = false);
-		APD("[debug] OnOutcomingRPC- actor found: %i", actor_detected);
+		printf("[debug] OnOutcomingRPC- actor found: %i", actor_detected);
 		if((Player_AP[playerid][isdynamic][actor_detected] & HIDE_TYPE_PERMANENT))
 		{
 			APD("%i detected as a permanent hidden actor for playerid: %i", actorid, playerid);
@@ -1576,6 +1568,19 @@ static S->Internal_HideAnActorForPlayer(playerid, actorid)
 	return 1;
 }
 
+
+static S->AP_ReturnFreeEmplacement()
+{
+	#if USING_Y_ITERATE
+	for(new i; i < sizeof(Internal_ActorsID); i++)
+		if(Internal_ActorsID[i][0] == INVALID_ACTOR_ID)
+			return i;
+	return INVALID_ACTOR_ID;
+	#else
+		return 1;
+	#endif
+}
+
 #endif
 
 
@@ -1600,16 +1605,29 @@ static S->RecreateActor(actorid)
 		SetActorHealth(actorid, Actors_Plus[STATIC_CATEGORY][actorid][eapHealth]);
 		SetActorInvulnerable(actorid, ((Actors_Flags[actorid][DYNAMIC_CATEGORY] & IS_INVULNERABLE) == IS_INVULNERABLE));
 		return 1;
-
 	#else
-	DestroyDynamicActor(actorid);
-	Actors_Plus[isdynamic][actorid][eapID] = CreateDynamicActor(Actors_Plus[isdynamic][actorid][eapSkin], Actors_Plus[isdynamic][actorid][eapPosX], Actors_Plus[isdynamic][actorid][eapPosY], Actors_Plus[isdynamic][actorid][eapPosZ], Actors_Plus[isdynamic][actorid][eapPosAngle], Actors_Plus[isdynamic][actorid][eapInvulnerable], Actors_Plus[isdynamic][actorid][eapHealth], Actors_Plus[isdynamic][actorid][eapVW],
-		Actors_Plus[isdynamic][actorid][eapInt], Actors_Plus[isdynamic][actorid][eapPlayerid], Actors_Plus[isdynamic][actorid][eapStreamDistance], Actors_Plus[isdynamic][actorid][eapAreaid], Actors_Plus[isdynamic][actorid][eapPriority]);
+	if(!isdynamic)
+	{
+		DestroyActor(actorid);
+		Actors_Plus[isdynamic][actorid][eapID] = CreateActor(Actors_Plus[isdynamic][actorid][eapSkin], Actors_Plus[isdynamic][actorid][eapPosX], Actors_Plus[isdynamic][actorid][eapPosY], Actors_Plus[isdynamic][actorid][eapPosZ], Actors_Plus[isdynamic][actorid][eapPosAngle]);
+		
+		if(Actors_Plus[isdynamic][actorid][eapLabel] != Text3D:INVALID_3DTEXT_ID)
+			Internal_Update3DActorTextLabel(actorid);
 
-	if(Actors_Plus[isdynamic][actorid][eapLabel] != Text3D:INVALID_3DTEXT_ID)
-		Internal_Update3DActorTextLabel(actorid);
-	SetDynamicActorHealth(actorid, Actors_Plus[isdynamic][actorid][eapHealth]);
-	SetDynamicActorInvulnerable(actorid, ((Actors_Flags[actorid][isdynamic] & IS_INVULNERABLE) == IS_INVULNERABLE));
+		SetActorHealth(actorid, Actors_Plus[isdynamic][actorid][eapHealth]);
+		SetActorInvulnerable(actorid, ((Actors_Flags[actorid][DYNAMIC_CATEGORY] & IS_INVULNERABLE) == IS_INVULNERABLE));
+	}
+	else
+	{
+		DestroyDynamicActor(actorid);
+		Actors_Plus[isdynamic][actorid][eapID] = CreateDynamicActor(Actors_Plus[isdynamic][actorid][eapSkin], Actors_Plus[isdynamic][actorid][eapPosX], Actors_Plus[isdynamic][actorid][eapPosY], Actors_Plus[isdynamic][actorid][eapPosZ], Actors_Plus[isdynamic][actorid][eapPosAngle], Actors_Plus[isdynamic][actorid][eapInvulnerable], Actors_Plus[isdynamic][actorid][eapHealth], Actors_Plus[isdynamic][actorid][eapVW],
+			Actors_Plus[isdynamic][actorid][eapInt], Actors_Plus[isdynamic][actorid][eapPlayerid], Actors_Plus[isdynamic][actorid][eapStreamDistance], Actors_Plus[isdynamic][actorid][eapAreaid], Actors_Plus[isdynamic][actorid][eapPriority]);
+
+		if(Actors_Plus[isdynamic][actorid][eapLabel] != Text3D:INVALID_3DTEXT_ID)
+			Internal_Update3DActorTextLabel(actorid);
+		SetDynamicActorHealth(actorid, Actors_Plus[isdynamic][actorid][eapHealth]);
+		SetDynamicActorInvulnerable(actorid, ((Actors_Flags[actorid][isdynamic] & IS_INVULNERABLE) == IS_INVULNERABLE));
+	}
 	return 1;
 	#endif
 }
@@ -1694,14 +1712,6 @@ static stock Internal_Update3DActorTextLabel(actorid)
 	#endif
 }
 
-static S->AP_ReturnFreeEmplacement()
-{
-	for(new i; i < sizeof(Internal_ActorsID); i++)
-		if(Internal_ActorsID[i][0] == INVALID_ACTOR_ID)
-			return i;
-	return INVALID_ACTOR_ID;
-}
-
 // =======================================================================================================================================================================================
 // =========================================================================== Hooked native functions ===================================================================================
 // =======================================================================================================================================================================================
@@ -1727,15 +1737,14 @@ static S->AP_ReturnFreeEmplacement()
 		Actors_Plus[DYNAMIC_CATEGORY][actorid][eapPosZ] = z;
 		Actors_Plus[DYNAMIC_CATEGORY][actorid][eapPosAngle] = r;
 
+		new new_real_actorid = AP_ReturnFreeEmplacement();
+		Internal_ActorsID[new_real_actorid][0] = actorid;
+		Internal_ActorsID[new_real_actorid][1] = DYNAMIC_CATEGORY;
+
 		#if !USING_Y_ITERATE
-			new new_real_actorid = AP_ReturnFreeEmplacement();
-			APD("[CreateDynamicActor()] new_real_actorid -> %i", new_real_actorid);
 			Actors_Flags[actorid][DYNAMIC_CATEGORY] |= IS_EXISTING;
-			Internal_ActorsID[new_real_actorid][0] = actorid;
-			Internal_ActorsID[new_real_actorid][1] = DYNAMIC_CATEGORY;
 		#else
 			Iter_Add(Dynamic_Actors, actorid);
-			Iter_Add(Internal_ActorsID, actorid);
 		#endif
 
 		if(invulnerable)
@@ -1766,23 +1775,14 @@ static S->AP_ReturnFreeEmplacement()
 	stock AP_DestroyDynamicActor(STREAMER_TAG_ACTOR actorid)
 	{
 		APD("Dynamic actorid %i has been destroyed.", actorid);
-		new reset_var[E_ACTOR_PLUS_DATA];
+		new reset_var[E_ACTOR_PLUS_DATA],
+			real_actorid = GetRealActorID(actorid);
+
+		Internal_ActorsID[real_actorid][0] = INVALID_ACTOR_ID;
+		Internal_ActorsID[real_actorid][1] = ALL_VALUES_INCLUDED;
 		#if USING_Y_ITERATE
-			new real_actorid;
-			foreach(new i : Internal_ActorsID)
-			{
-				if(Internal_ActorsID[i] == actorid)
-				{
-					real_actorid = i;
-					break;
-				}
-			}
 			Iter_Remove(Dynamic_Actors, actorid);
-			Iter_Remove(Internal_ActorsID[real_actorid], actorid);
 		#else
-			new real_actorid = GetRealActorID(actorid);
-			APD("[DestroyDynamicActor()] real_actorid: DYA -> %i", real_actorid);
-			Internal_ActorsID[real_actorid][0] = INVALID_ACTOR_ID;
 			Actors_Flags[actorid][DYNAMIC_CATEGORY] &= ~IS_EXISTING;
 		#endif
 		Actors_Plus[DYNAMIC_CATEGORY][actorid] = reset_var;
@@ -1864,7 +1864,6 @@ static S->AP_ReturnFreeEmplacement()
 	#endif
 	#define ApplyDynamicActorAnimation AP_ApplyDynamicActorAnimation
 
-
 #endif // #if USING_STREAMER
 
 stock AP_ApplyActorAnimation(actorid, animlib[], animname[], Float:fdelta, loop, lockx, locky, freeze, time)
@@ -1910,18 +1909,19 @@ stock AP_CreateActor(modelid, Float:X, Float:Y, Float:Z, Float:Rotation)
 	Actors_Plus[STATIC_CATEGORY][actorid][eapHealth] = 100.0;
 	Actors_Plus[STATIC_CATEGORY][actorid][eapPosAngle] = Rotation;
 	Actors_Plus[STATIC_CATEGORY][actorid][eapLabel] = Text3D:INVALID_3DTEXT_ID;
+
+	new new_real_actorid = AP_ReturnFreeEmplacement();
+	Internal_ActorsID[new_real_actorid][0] = actorid;
+	Internal_ActorsID[new_real_actorid][1] = STATIC_CATEGORY;
+	APD("Real found id : %i - Actorid: %i", new_real_actorid, actorid);
+
 	#if defined OnActorSpawn
 		OnActorSpawn(actorid, false);
 	#endif
 	#if !USING_Y_ITERATE
 		Actors_Flags[actorid][STATIC_CATEGORY] |= IS_EXISTING;
-		new new_real_actorid = AP_ReturnFreeEmplacement();
-		APD("[CreateActor()] Returned AP_ReturnFreeEmplacement: %i", new_real_actorid);
-		Internal_ActorsID[new_real_actorid][0] = actorid;
-		Internal_ActorsID[new_real_actorid][1] = STATIC_CATEGORY;
 	#else
 		Iter_Add(Static_Actors, actorid);
-		Iter_Add(Internal_ActorsID[AP_ReturnFreeEmplacement()], actorid);
 	#endif
 	APD("CreateActor: %i created. (internal id: %i)", actorid, GetRealActorID(actorid));
 	return actorid;
@@ -1930,12 +1930,12 @@ stock AP_CreateActor(modelid, Float:X, Float:Y, Float:Z, Float:Rotation)
 stock AP_DestroyActor(actorid)
 {
 	APD("Normal actorid %i has been destroyed.", actorid);
+	Internal_ActorsID[actorid][0] = INVALID_ACTOR_ID;
+	Internal_ActorsID[actorid][1] = ALL_VALUES_INCLUDED;
+
 	#if USING_Y_ITERATE
 		Iter_Remove(Static_Actors, actorid);
-		Iter_Remove(Internal_ActorsID, actorid);
 	#else
-		APD("[AP_DestroyActor()] actorid: DYA -> %i", actorid);
-		Internal_ActorsID[actorid][0] = INVALID_ACTOR_ID;
 		Actors_Flags[actorid][STATIC_CATEGORY] &= ~IS_EXISTING;
 	#endif
 	new reset_var[E_ACTOR_PLUS_DATA];
@@ -2008,7 +2008,6 @@ stock AP_SetActorInvulnerable(actorid, invulnerable = true)
 	{
 		SetActorPos(actorid, Actors_Plus[STATIC_CATEGORY][actorid][eapPosX], Actors_Plus[STATIC_CATEGORY][actorid][eapPosY], Actors_Plus[STATIC_CATEGORY][actorid][eapPosZ]);
 		SetActorFacingAngle(actorid, Actors_Plus[STATIC_CATEGORY][actorid][eapPosAngle]);
-		APD("%i called: AP_ReplaceActor()", actorid);
 		return 1;
 	}
 #else
@@ -2017,7 +2016,6 @@ stock AP_SetActorInvulnerable(actorid, invulnerable = true)
 	{
 		SetActorPos(actorid, Actors_Plus[STATIC_CATEGORY][actorid][eapPosX], Actors_Plus[STATIC_CATEGORY][actorid][eapPosY], Actors_Plus[STATIC_CATEGORY][actorid][eapPosZ]);
 		SetActorFacingAngle(actorid, Actors_Plus[STATIC_CATEGORY][actorid][eapPosAngle]);
-		APD("%i called: AP_ReplaceActor()", actorid);
 		return 1;
 	}
 #endif
