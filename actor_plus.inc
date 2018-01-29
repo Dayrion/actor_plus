@@ -3,7 +3,7 @@
 
 		Include started at 19/01/18.
 		-Dayrion
-		Public version - beta v2.0.00
+		Public version - beta v2.1.10
 */
 
 
@@ -76,7 +76,7 @@
 // =====================================================================================
 
 #define S->%1(%0) 	stock %1(%0)
-#define actor_plus_version 0x20000b
+#define actor_plus_version "v2.1.10"
 
 // =====================================================================================
 
@@ -150,6 +150,11 @@ enum _:E_TYPE_SEARCH(<<= 1)
 #if defined OnActorSpawn
 	forward OnActorSpawn(actorid, bool:IsDynamicActor);
 #endif
+
+#if defined OnPlayerStreamForActor
+	forward OnPlayerStreamForActor(forplayerid, actorid, hidden_type, bool:IsDynamicActor);
+#endif
+
 
 // =====================================================================================
 
@@ -232,9 +237,11 @@ static
 
 enum _:E_PLAYER_AP_FLAGS(<<= 1)
 {
-	HIDE_TYPE_ONE_TIME = 1,
+	HIDE_TYPE_NONE = 1,
+	HIDE_TYPE_ONE_TIME,
 	HIDE_TYPE_PERMANENT,
 
+	ANIMATION_PLAY_NONE,
 	ANIMATION_PLAY_ONE_TIME,
 	ANIMATION_PLAY_ONE_PERMANENT,
 };
@@ -481,7 +488,7 @@ public OnPlayerGiveDamageActor(playerid, damaged_actorid, Float:amount, weaponid
 
 	GetPlayerLastShotVectors(playerid, fOriginX, fOriginY, fOriginZ, fHitPosX, fHitPosY, fHitPosZ);
 
-	if(GetNearestActorByCoord(fHitPosX, fHitPosY, fHitPosZ, .type = SEARCH_TYPE_STATIC) == damaged_actorid)
+	if(GetNearestActorByCoord(fHitPosX, fHitPosY, fHitPosZ, .type = SEARCH_TYPE_STATIC, .return_multiple_target = false) == damaged_actorid)
 	{
 		new bool:death = ((Actors_Plus[STATIC_CATEGORY][damaged_actorid][eapHealth] -= amount) <= 0.0);
 		
@@ -539,7 +546,8 @@ public OnPlayerGiveDamageActor(playerid, damaged_actorid, Float:amount, weaponid
 #endif
 
 
-#if USING_STREAMER && (defined OnPlayerMakeDamageToActor || defined OnActorDeath)
+#if USING_STREAMER //&& (defined OnPlayerMakeDamageToActor || defined OnActorDeath)
+
 public OnPlayerGiveDamageDynamicActor(playerid, STREAMER_TAG_ACTOR actorid, Float:amount, weaponid, bodypart)
 {
 	new 
@@ -548,7 +556,7 @@ public OnPlayerGiveDamageDynamicActor(playerid, STREAMER_TAG_ACTOR actorid, Floa
 
 	GetPlayerLastShotVectors(playerid, fOriginX, fOriginY, fOriginZ, fHitPosX, fHitPosY, fHitPosZ);
 
-	if(GetNearestActorByCoord(fHitPosX, fHitPosY, fHitPosZ, .type = SEARCH_TYPE_DYNAMIC) == actorid)
+	if(GetNearestActorByCoord(fHitPosX, fHitPosY, fHitPosZ, .type = SEARCH_TYPE_DYNAMIC, .return_multiple_target = false) == actorid)
 	{
 		new bool:death = ((Actors_Plus[DYNAMIC_CATEGORY][actorid][eapHealth] - amount) <= 0.0);
 
@@ -595,7 +603,6 @@ public OnPlayerGiveDamageDynamicActor(playerid, STREAMER_TAG_ACTOR actorid, Floa
 	#endif
 }
 
-
 #if defined _ALS_OnPlayerGiveDamageDynActor
     #undef OnPlayerGiveDamageDynamicActor
 #else
@@ -606,7 +613,7 @@ public OnPlayerGiveDamageDynamicActor(playerid, STREAMER_TAG_ACTOR actorid, Floa
 	forward OnPlayerGiveDamageDynamicActorA(playerid, STREAMER_TAG_ACTOR actorid, Float:amount, weaponid, bodypart);
 #endif
 
-#endif // #if USING_STREAMER && (defined OnPlayerMakeDamageToActor || defined OnActorDeath)
+#endif // #if USING_STREAMER
 
 public OnPlayerConnect(playerid)
 {
@@ -630,7 +637,7 @@ public OnPlayerConnect(playerid)
 
 // =====================================================================================
 
-#if !defined DONT_DETECT_OPTA && defined OnPlayerTargetActor
+#if !defined DONT_DETECT_OPTA // && defined OnPlayerTargetActor
 	#if !USING_Y_TIMERS
 		forward @AP_AimingActor();
 		@AP_AimingActor()
@@ -642,7 +649,9 @@ public OnPlayerConnect(playerid)
 					if(actorid != INVALID_ACTOR_ID && Player_ActorTarget[i] != actorid)
 					{
 						Player_ActorTarget[i] = actorid;
-						OnPlayerTargetActor(i, actorid, GetPlayerWeapon(i));
+						#if defined OnPlayerTargetActor
+							OnPlayerTargetActor(i, actorid, GetPlayerWeapon(i));
+						#endif
 					}
 				}
 			#else
@@ -652,7 +661,9 @@ public OnPlayerConnect(playerid)
 					if(actorid != INVALID_ACTOR_ID && Player_ActorTarget[i] != actorid)
 					{
 						Player_ActorTarget[i] = actorid;
-						OnPlayerTargetActor(i, actorid, GetPlayerWeapon(i));
+						#if defined OnPlayerTargetActor
+							OnPlayerTargetActor(i, actorid, GetPlayerWeapon(i));
+						#endif
 					}
 				}
 			#endif
@@ -710,7 +721,9 @@ public OnPlayerConnect(playerid)
 			if(actorid != INVALID_ACTOR_ID && Player_ActorTarget[i] != actorid)
 			{
 				Player_ActorTarget[playerid] = actorid;
-				OnPlayerTargetActor(playerid, actorid, GetPlayerWeapon(i));
+				#if defined OnPlayerTargetActor
+					OnPlayerTargetActor(i, actorid, GetPlayerWeapon(i));
+				#endif
 			}
 			return 1;	
 		}
@@ -1455,44 +1468,35 @@ S->Float:GetActorDistanceFromPoint(actorid, Float:x, Float:y, Float:z)
 
 
 #if USING_PAWN_RAKNET
-S->HideActorForPlayer(playerid, actorid, hide_type, bool:isdynamic = true)
+S->HideActorForPlayer(forplayerid, actorid, hide_type, bool:isdynamic = true)
 {
-	if(!IsPlayerConnected(playerid) || !AP_IsValidActor(actorid, isdynamic))
+	if(!IsPlayerConnected(forplayerid) || !AP_IsValidActor(actorid, isdynamic))
 		return 0;
 
-	if(!(hide_type & HIDE_TYPE_ONE_TIME) && !(hide_type & HIDE_TYPE_PERMANENT))
+	if(!(Player_AP[forplayerid][isdynamic][actorid] & HIDE_TYPE_ONE_TIME) && !(Player_AP[forplayerid][isdynamic][actorid] & HIDE_TYPE_PERMANENT))
 		return cellmin;
 
-	if(hide_type & Player_AP[playerid][isdynamic][actorid])
-		return cellmin;
-
-	Player_AP[playerid][isdynamic][actorid] |= hide_type;
+	Player_AP[forplayerid][isdynamic][actorid] |= hide_type;
 
 	if(isdynamic)
-	{
-		APD("-> HideActorForPlayer: %i", GetRealActorID(actorid));
 		actorid = GetRealActorID(actorid);
-	}
 
-	Internal_HideAnActorForPlayer(playerid, actorid);
+	Internal_HideAnActorForPlayer(forplayerid, actorid);
 	return 1;
 }
 
-S->BringBackActorForPlayer(playerid, actorid, bool:isdynamic = true)
+S->BringBackActorForPlayer(forplayerid, actorid, bool:isdynamic = true)
 {
-	if(!IsPlayerConnected(playerid) || !AP_IsValidActor(actorid, isdynamic))
+	if(!IsPlayerConnected(forplayerid) || !AP_IsValidActor(actorid, isdynamic))
 		return 0;
 
-	if(!(Player_AP[playerid][isdynamic][actorid] & HIDE_TYPE_ONE_TIME) && !(Player_AP[playerid][isdynamic][actorid] & HIDE_TYPE_PERMANENT))
+	if(!(Player_AP[forplayerid][isdynamic][actorid] & HIDE_TYPE_ONE_TIME) && !(Player_AP[forplayerid][isdynamic][actorid] & HIDE_TYPE_PERMANENT))
 		return cellmin;
 
-	Player_AP[playerid][isdynamic][actorid] &= ~Player_AP[playerid][isdynamic][actorid];
+	Player_AP[forplayerid][isdynamic][actorid] = ~Player_AP[forplayerid][isdynamic][actorid] & (HIDE_TYPE_PERMANENT | HIDE_TYPE_ONE_TIME) | HIDE_TYPE_NONE;
 
 	if(isdynamic)
-	{
-		APD("-> BringBackActorForPlayer: %i", GetRealActorID(actorid));
 		actorid = GetRealActorID(actorid);
-	}
 
 	new BitStream:bit_stream = BS_New(); 
 	BS_WriteValue(bit_stream, 
@@ -1504,47 +1508,70 @@ S->BringBackActorForPlayer(playerid, actorid, bool:isdynamic = true)
 		PR_FLOAT, Actors_Plus[isdynamic][actorid][eapPosAngle],
 		PR_FLOAT, Actors_Plus[isdynamic][actorid][eapHealth]); 
 
-	BS_RPC(bit_stream, playerid, 0xAB); 
+	BS_RPC(bit_stream, forplayerid, 0xAB); 
 	BS_Delete(bit_stream);
 	return 1;
 }
 
-S->GetRealActorID(actorid)
+S->SetActorHideTypeForPlayer(forplayerid, actorid, hide_type, bool:isdynamic)
 {
-	if(!IsValidDynamicActor(actorid))
+	if(!IsPlayerConnected(forplayerid) || !AP_IsValidActor(actorid, isdynamic))
+		return 0;
+
+	if(!(Player_AP[forplayerid][isdynamic][actorid] & HIDE_TYPE_ONE_TIME) && !(Player_AP[forplayerid][isdynamic][actorid] & HIDE_TYPE_PERMANENT))
 		return cellmin;
 
-	for(new i; i < sizeof(Internal_ActorsID); i++)
-		if(Internal_ActorsID[i][0] == actorid && Internal_ActorsID[i][1] == DYNAMIC_CATEGORY)
-			return i;
-	return INVALID_ACTOR_ID;
+	Player_AP[forplayerid][isdynamic][actorid] = ~Player_AP[forplayerid][isdynamic][actorid] & (HIDE_TYPE_PERMANENT | HIDE_TYPE_ONE_TIME) | hide_type;
+	return 1;
 }
 
 public OnOutcomingRPC(playerid, rpcid, BitStream:bs)
 {
 	if(rpcid == 0xAB)
 	{
-		new actor_detected,
-			actorid,
+		new actorid,
+			internal_actorid,
 			Float:x,
 			Float:y,
 			Float:z,
 			bool:isdynamic;
-		BS_ReadUint16(bs, actorid);
-		printf("[debug] OnOutcomingRPC- actorid: %i", actorid);
-		GetActorPos(actorid, x, y, z);
-		actor_detected = GetNearestActorByCoord(x, y, z, 1.0, isdynamic, .return_multiple_target = false);
-		printf("[debug] OnOutcomingRPC- actor found: %i", actor_detected);
-		if((Player_AP[playerid][isdynamic][actor_detected] & HIDE_TYPE_PERMANENT))
+		BS_ReadUint16(bs, internal_actorid);
+		GetActorPos(internal_actorid, x, y, z);
+		actorid = GetNearestActorByCoord(x, y, z, 1.0, isdynamic, .return_multiple_target = false);
+		if((Player_AP[playerid][isdynamic][actorid] & HIDE_TYPE_PERMANENT))
 		{
-			APD("%i detected as a permanent hidden actor for playerid: %i", actorid, playerid);
+			#if defined OnPlayerStreamForActor
+				OnPlayerStreamForActor(playerid, internal_actorid, HIDE_TYPE_PERMANENT, isdynamic);
+			#endif
+			APD("%i detected as a permanent hidden actor for playerid: %i", internal_actorid, playerid);
 			return 0;
 		}
+
+		if((Player_AP[playerid][isdynamic][actorid] & HIDE_TYPE_ONE_TIME))
+		{
+			Player_AP[playerid][isdynamic][actorid] &= ~HIDE_TYPE_ONE_TIME;
+			APD("%i detected as a temporary hidden actor for playerid: %i", internal_actorid, playerid);
+			#if defined OnPlayerStreamForActor
+				OnPlayerStreamForActor(playerid, internal_actorid, HIDE_TYPE_ONE_TIME, isdynamic);
+			#endif
+		}
+		else
+		{
+			#if defined OnPlayerStreamForActor
+				OnPlayerStreamForActor(playerid, internal_actorid, HIDE_TYPE_NONE, isdynamic);
+			#endif
+		}
+		#if defined AP_OnOutcomingRPC
+			return AP_OnOutcomingRPC(playerid, rpcid, bs);
+		#else
+			return 1;
+		#endif
 	}
 	#if defined AP_OnOutcomingRPC
 		return AP_OnOutcomingRPC(playerid, rpcid, bs);
 	#else
 		return 1;
+	#endif
 }
 
 #if defined _ALS_OnOutcomingRPC
@@ -1557,6 +1584,18 @@ public OnOutcomingRPC(playerid, rpcid, BitStream:bs)
 	forward AP_OnOutcomingRPC(playerid, rpcid, BitStream:bs);
 #endif
 
+
+S->GetRealActorID(actorid)
+{
+	if(!IsValidDynamicActor(actorid))
+		return cellmin;
+
+	for(new i; i < sizeof(Internal_ActorsID); i++)
+		if(Internal_ActorsID[i][0] == actorid && Internal_ActorsID[i][1] == DYNAMIC_CATEGORY)
+			return i;
+	return INVALID_ACTOR_ID;
+}
+
 static S->Internal_HideAnActorForPlayer(playerid, actorid)
 {
 	new BitStream:bit_stream = BS_New(); 
@@ -1568,20 +1607,15 @@ static S->Internal_HideAnActorForPlayer(playerid, actorid)
 	return 1;
 }
 
-
 static S->AP_ReturnFreeEmplacement()
 {
-	#if USING_Y_ITERATE
 	for(new i; i < sizeof(Internal_ActorsID); i++)
 		if(Internal_ActorsID[i][0] == INVALID_ACTOR_ID)
 			return i;
 	return INVALID_ACTOR_ID;
-	#else
-		return 1;
-	#endif
 }
 
-#endif
+#endif // #if USING_PAWN_RAKNET
 
 
 // =======================================================================================================================================================================================
