@@ -85,17 +85,18 @@ native SetActorPosForPlayer(forplayerid, actorid, fake_position_type, Float:x, F
 native BringBackActorPosForPlayer(forplayerid, actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 ```
 
-### Hide type
+### Actor Flags
+#### Hide type
 * `HIDE_TYPE_NONE`: Default value
 * `HIDE_TYPE_ONE_TIME`: The actor will be hidden one time and reappear when it be streamed
 * `HIDE_TYPE_PERMANENT`: The actor will be hidden until the script make it come back even if the player re-stream the actor
 
-### Repeated animation type
+#### Repeated animation type
 * `ANIMATION_PLAY_NONE`: Default value
 * `ANIMATION_PLAY_ONE_TIME`: The actor will play an animation one time and stop it when it be streamed even if the animation is looped
 * `ANIMATION_PLAY_PERMANENT`: The actor will permently play the same animation. Restream the actor doesn't stop the process
 
-### Per players positions type
+#### Per players positions type
 * `FAKE_POSITION_NONE`: Default value
 * `FAKE_POSITION_ONE_TIME`: The actor will be placed, one time, at the specified coordinates. Re-stream the actor will place him at server sided coordinates
 * `FAKE_POSITION_PERMANENT`: The actor will be placed at specified coordinates. Re-stream it won't change anything the coordinates.
@@ -107,7 +108,7 @@ forward OnPlayerTargetActor(playerid, actorid, weaponid);
 forward OnPlayerMakeDamageToActor(playerid, damaged_actorid, Float:amount, weaponid, bodypart, bool:death, bool:IsDynamicActor);
 forward OnActorDeath(actorid, killerid, reason, bool:IsDynamicActor);
 forward OnActorSpawn(actorid, bool:IsDynamicActor);
-forward OnPlayerStreamForActor(forplayerid, actorid, hidden_type, bool:IsDynamicActor);
+forward OnPlayerStreamForActor(forplayerid, actorid, actor_flags, bool:IsDynamicActor);
 ```
 
 ### Explanations
@@ -118,6 +119,6 @@ forward OnPlayerStreamForActor(forplayerid, actorid, hidden_type, bool:IsDynamic
 * `OnActorDeath`: Called when a actor die. *Set actor's HP to 0 trigger this callback too.*
 * `OnActorSpawn`: Called when a player spawn (is created).
 * `OnPlayerStreamForActor`: Called when a player stream **IN** and actor even if the actor is hidden for the player.
-***Important***: hidden_type return **hide_type** previously defined (see above).
+***Important***: actor_flags should be used with different flags type defined below
 
 ### **HUGE** thank you to Jelly23 for his precious help and time to help me by answering hundred and hundred of my questions about PawnRakNet and other stuffs. Thanks also to Y_Less for fixing issues about hooking callbacks.
