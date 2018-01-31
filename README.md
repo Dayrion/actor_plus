@@ -2,7 +2,7 @@
 An include with a bunch of useful functions and callback for actors.
 Functions returning 1 on success, 0 on failure or cellmin for specific failure. Please, check the wiki for more specific informations.
 
-***Actual version:*** *public - beta v3.0.01*
+***Actual version:*** *public - beta v3.0.1*
 
 ## Documentation
 ### Constant
@@ -16,12 +16,12 @@ Functions returning 1 on success, 0 on failure or cellmin for specific failure. 
 * `MAX_ANIMATION_LIBRARY_LENGTH`: Maximum animation library length name
 * `MAX_ANIMATION_NAME_LENGTH`: Maximum animation length name (need to be modified)
 * `DEFAULT_IS_DYNAMIC_PARAMETER`: Set to `true` if streamer is included otherwise, it set to `false`
-* `DONT_DETECT_OPTA`: You can define it before the include to deactivated `OnPlayerTargetActor` detection (which using timer). 
 
 #### Can be redefined
 * `DEFAULT_ACTOR_DRAW_DISTANCE`: Distance that label is displayed
 * `MAX_ACTOR_LABEL_LENGTH`: Max length for a text in a label
 * `DEFAULT_ACTOR_COLOR`: Default actor color name
+* `DONT_DETECT_OPTA`: You can define it before the include to deactivated `OnPlayerTargetActor` detection (which using timer). 
 
 ### General functions
 ```pawn
@@ -115,10 +115,10 @@ forward OnPlayerStreamForActor(forplayerid, actorid, actor_flags, bool:IsDynamic
 * `OnPlayerShotActor`: Called when a player shot an actor even if the actor is invulnerable
 * `OnPlayerTargetActor`: Called when a player aim an actor.
 * `OnPlayerMakeDamageToActor`: Called when a player damage an actor with a **firearm**. `bool:death` is set to `true` when the actor will die after processing damage.
-***Returning 0 to this call prevent applying damage to the actor.***
+» ***Returning 0 to this call prevent applying damage to the actor.***
 * `OnActorDeath`: Called when a actor die. *Set actor's HP to 0 trigger this callback too.*
 * `OnActorSpawn`: Called when a player spawn (is created).
-* `OnPlayerStreamForActor`: Called when a player stream **IN** and actor even if the actor is hidden for the player.
-***Important***: actor_flags should be used with different flags type defined below
+* `OnPlayerStreamForActor`: Called when a player stream **IN** an actor even if the actor is hidden for the player.
+» ***Important***: actor_flags should be used with different flags type defined below
 
 ### **HUGE** thank you to Jelly23 for his precious help and time to help me by answering hundred and hundred of my questions about PawnRakNet and other stuffs. Thanks also to Y_Less for fixing issues about hooking callbacks.
