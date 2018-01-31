@@ -3,7 +3,7 @@
 
 		Include started at 19/01/18.
 		-Dayrion
-		Public version - beta v3.0.00
+		Public version - beta v3.0.01
 */
 
 
@@ -297,8 +297,9 @@ S->GetNearestActorForPlayer(playerid, Float:range = 2.0, &bool:isdynamic = false
 		return INVALID_ACTOR_ID;
 
 	new actorid = INVALID_ACTOR_ID;
-	#if USING_STREAMER
-		#if USING_Y_ITERATE
+
+	#if USING_Y_ITERATE
+		#if USING_STREAMER
 			if(type & SEARCH_TYPE_STATIC)
 			{
 				foreach(new i : Static_Actors)
@@ -324,6 +325,21 @@ S->GetNearestActorForPlayer(playerid, Float:range = 2.0, &bool:isdynamic = false
 			}
 			return actorid;
 		#else
+			if(type & SEARCH_TYPE_STATIC)
+			{
+				foreach(new i : Static_Actors)
+				{
+					if(!IsPlayerInRangeOfPoint(playerid, range, Actors_Plus[STATIC_CATEGORY][i][eapPosX], Actors_Plus[STATIC_CATEGORY][i][eapPosY], Actors_Plus[STATIC_CATEGORY][i][eapPosZ]))
+						continue;
+					if(actorid != INVALID_ACTOR_ID && return_multiple_target)
+						return MULTIPLE_TARGET_FOUND;
+					actorid = i;
+				}
+			}
+			return actorid;
+		#endif // if USING_STREAMER 
+	#else
+		#if USING_STREAMER
 			if(type & SEARCH_TYPE_STATIC)
 			{
 				for(new i, j = GetActorPoolSize(); i <= j; i++)
@@ -354,21 +370,6 @@ S->GetNearestActorForPlayer(playerid, Float:range = 2.0, &bool:isdynamic = false
 				}
 			}
 			return actorid;
-		#endif
-	#else
-		#if USING_Y_ITERATE
-			if(type & SEARCH_TYPE_STATIC)
-			{
-				foreach(new i : Static_Actors)
-				{
-					if(!IsPlayerInRangeOfPoint(playerid, range, Actors_Plus[STATIC_CATEGORY][i][eapPosX], Actors_Plus[STATIC_CATEGORY][i][eapPosY], Actors_Plus[STATIC_CATEGORY][i][eapPosZ]))
-						continue;
-					if(actorid != INVALID_ACTOR_ID && return_multiple_target)
-						return MULTIPLE_TARGET_FOUND;
-					actorid = i;
-				}
-			}
-			return actorid;
 		#else
 			if(type & SEARCH_TYPE_STATIC)
 			{
@@ -385,8 +386,8 @@ S->GetNearestActorForPlayer(playerid, Float:range = 2.0, &bool:isdynamic = false
 				}
 			}
 			return actorid;
-		#endif
-	#endif
+		#endif // if USING_STREAMER 
+	#endif // if USING_Y_ITERATE
 }
 
 S->GetNearestActorByCoord(Float:x, Float:y, Float:z, Float:range = 2.0, &bool:isdynamic = false, type = SEARCH_TYPE_ALL, bool:return_multiple_target = true)
@@ -1629,7 +1630,14 @@ public OnActorStreamIn(actorid, forplayerid)
 
 	GetActorPos(actorid, x, y, z);
 	new related_actorid = GetNearestActorByCoord(x, y, z, 1.0, isdynamic, .return_multiple_target = false);
-
+	if(related_actorid == INVALID_ACTOR_ID)
+	{
+		#if defined AP_OnActorStreamIn
+			return AP_OnActorStreamIn(actorid, forplayerid);
+		#else
+			return 1;
+		#endif
+	}
 	if(Player_Flags[forplayerid][isdynamic][related_actorid] & ANIMATION_PLAY_PERMANENT)
 	{
 		APD("Applying custom (per-player) animation for actorid %i (from realid: %i).", related_actorid, actorid);
@@ -1715,6 +1723,14 @@ public OnOutcomingRPC(playerid, rpcid, BitStream:bs)
 		BS_ReadUint16(bs, internal_actorid);
 		GetActorPos(internal_actorid, x, y, z);
 		actorid = GetNearestActorByCoord(x, y, z, 1.0, isdynamic, .return_multiple_target = false);
+		if(actorid == INVALID_ACTOR_ID)
+		{
+			#if defined AP_OnOutcomingRPC
+				return AP_OnOutcomingRPC(playerid, rpcid, bs);
+			#else
+				return 1;
+			#endif
+		}
 		#if defined OnPlayerStreamForActor
 			OnPlayerStreamForActor(playerid, actorid, Player_Flags[playerid][isdynamic][actorid], isdynamic);
 		#endif

@@ -2,7 +2,7 @@
 An include with a bunch of useful functions and callback for actors.
 Functions returning 1 on success, 0 on failure or cellmin for specific failure. Please, check the wiki for more specific informations.
 
-***Actual version:*** *public - beta v3.0.00*
+***Actual version:*** *public - beta v3.0.01*
 
 ## Documentation
 ### Constant
@@ -71,7 +71,7 @@ native IsActorInPlayerFacingAngle(playerid, actorid, Float:max_angle = 90.0, boo
 * `SEARCH_TYPE_STATIC`: Search only for statics actors
 * `SEARCH_TYPE_ALL`: Search for dynamics **and** statics actors
 
-## Per-players functions (PawnRakNet dependency)
+## Per-players functions (Pawn RakNet dependency)
 ```pawn
 native HideActorForPlayer(forplayerid, actorid, hide_type, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native BringBackActorForPlayer(forplayerid, actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
@@ -108,7 +108,7 @@ forward OnPlayerTargetActor(playerid, actorid, weaponid);
 forward OnPlayerMakeDamageToActor(playerid, damaged_actorid, Float:amount, weaponid, bodypart, bool:death, bool:IsDynamicActor);
 forward OnActorDeath(actorid, killerid, reason, bool:IsDynamicActor);
 forward OnActorSpawn(actorid, bool:IsDynamicActor);
-forward OnPlayerStreamForActor(forplayerid, actorid, actor_flags, bool:IsDynamicActor);
+forward OnPlayerStreamForActor(forplayerid, actorid, actor_flags, bool:IsDynamicActor); // Pawn RakNet dependency
 ```
 
 ### Explanations
