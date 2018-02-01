@@ -2,7 +2,7 @@
 An include with a bunch of useful functions and callback for actors.
 Functions returning 1 on success, 0 on failure or cellmin for specific failure. Please, check the wiki for more specific informations.
 
-***Actual version:*** *public - beta v3.0.1*
+***Actual version:*** *public - beta v3.1.0*
 
 ## Documentation
 ### Constant
@@ -18,10 +18,11 @@ Functions returning 1 on success, 0 on failure or cellmin for specific failure. 
 * `DEFAULT_IS_DYNAMIC_PARAMETER`: Set to `true` if streamer is included otherwise, it set to `false`
 
 #### Can be redefined
-* `DEFAULT_ACTOR_DRAW_DISTANCE`: Distance that label is displayed
-* `MAX_ACTOR_LABEL_LENGTH`: Max length for a text in a label
-* `DEFAULT_ACTOR_COLOR`: Default actor color name
-* `DONT_DETECT_OPTA`: You can define it before the include to deactivated `OnPlayerTargetActor` detection (which using timer). 
+* `DEFAULT_ACTOR_DRAW_DISTANCE`: Distance that label is displayed | (type: `float`)
+* `MAX_ACTOR_LABEL_LENGTH`: Max length for a text in a label | (type: `integer`)
+* `DEFAULT_ACTOR_COLOR`: Default actor color name | (type: `hexadecimal`)
+* `DONT_DETECT_OPTA`: You can define it before the include to deactivated `OnPlayerTargetActor` detection (which using timer) | (type: `N/A`)
+* `DEFAULT_TEXT_RANGE_DETECTION`: This allows you to change the distance at which the actor (for `OnPlayerTextNearActor` **only**) is detected | (type: `float`)
 
 ### General functions
 ```pawn
@@ -54,12 +55,13 @@ native GetRealActorID(actorid);
 ### Functions - Non-Streamer dependency
 ```pawn
 native Attach3DTextLabelToActor(actorid, const text[], color, Float:OffsetX, Float:OffsetY, Float:OffsetZ, Float:drawdistance, virtualworld = DEFAULT_ACTOR_VALUE, testlos = 0, bool:store_string = true);
+native SetActorInvulnerable(actorid, invulnerable = true); // Force actor re-stream
 ```
 
 ### Useful functions (none include needed)
 ```pawn
-native GetNearestActorForPlayer(playerid, Float:range = 2.0, &bool:IsDynamic = false, type = SEARCH_TYPE_ALL, bool:return_multiple_target = true);
-native GetNearestActorByCoord(Float:x, Float:y, Float:z, Float:range = 2.0, &bool:IsDynamic = false, type = SEARCH_TYPE_ALL, bool:return_multiple_target = true);
+native GetNearestActorForPlayer(playerid, &bool:isdynamic = false, type = SEARCH_TYPE_ALL, bool:return_multiple_target = false);
+native GetNearestActorByCoord(Float:x, Float:y, Float:z, &bool:isdynamic = false, type = SEARCH_TYPE_ALL, bool:return_multiple_target = false);
 native Float:GetActorDistanceFromPoint(actorid, Float:x, Float:y, Float:z, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native IsPlayerInRangeOfActor(playerid, actorid, Float:range = 2.0, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native IsPlayerAimingActor(playerid, actorid); // Returning 0 everytime if `DONT_DETECT_OPTA` is defined
@@ -109,16 +111,22 @@ forward OnPlayerMakeDamageToActor(playerid, damaged_actorid, Float:amount, weapo
 forward OnActorDeath(actorid, killerid, reason, bool:IsDynamicActor);
 forward OnActorSpawn(actorid, bool:IsDynamicActor);
 forward OnPlayerStreamForActor(forplayerid, actorid, actor_flags, bool:IsDynamicActor); // Pawn RakNet dependency
+forward OnActorVirtualWorldChange(actorid, oldvw, newvw, bool:IsDynamicActor);
+forward OnPlayerTextNearActor(playerid, actorid, text[], bool:IsDynamicActor);
+forward OnDynamicActorInteriorChange(actorid, oldinterior, newinteriorid);
 ```
 
 ### Explanations
 * `OnPlayerShotActor`: Called when a player shot an actor even if the actor is invulnerable
 * `OnPlayerTargetActor`: Called when a player aim an actor.
 * `OnPlayerMakeDamageToActor`: Called when a player damage an actor with a **firearm**. `bool:death` is set to `true` when the actor will die after processing damage.
-» ***Returning 0 to this call prevent applying damage to the actor.***
+***Returning 0 to this call prevent applying damage to the actor.***
 * `OnActorDeath`: Called when a actor die. *Set actor's HP to 0 trigger this callback too.*
 * `OnActorSpawn`: Called when a player spawn (is created).
 * `OnPlayerStreamForActor`: Called when a player stream **IN** an actor even if the actor is hidden for the player.
-» ***Important***: actor_flags should be used with different flags type defined below
+***Important: actor_flags should be used with different flags type defined below***
+* `OnActorVirtualWorldChange`: Called when a virtualworld is set to an actor 
+* `OnPlayerTextNearActor`: Called when a player chat near an actor
+* `OnDynamicActorInteriorChange`: Called when an interior is set to a dynamic actor
 
 ### **HUGE** thank you to Jelly23 for his precious help and time to help me by answering hundred and hundred of my questions about PawnRakNet and other stuffs. Thanks also to Y_Less for fixing issues about hooking callbacks.
