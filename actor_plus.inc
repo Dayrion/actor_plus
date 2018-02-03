@@ -3,7 +3,7 @@
 
 		Include started at 19/01/18.
 		-Dayrion
-		Public version - beta v3.1.0
+		Public version - beta v3.2.0
 */
 
 
@@ -27,13 +27,15 @@
 
 #if defined _streamer_included
 	#if !defined GetDynamicActorAnimation
-		#warning "<actor+> Streamer version is not up to date. actor+ won't use it"
+		#if __Pawn >= 0x030A
+			#warning "<actor+> Streamer version is not up to date. actor+ won't use it"
+		#endif
 		#define USING_STREAMER (0)
 		#define DEFAULT_IS_DYNAMIC_PARAMETER (false)
 	#else
 		#define USING_STREAMER (1)
 		#define DEFAULT_IS_DYNAMIC_PARAMETER (true)
-		#if defined AP_DEBUG_ENABLED
+		#if defined AP_DEBUG_ENABLED && __Pawn >= 0x030A
 			#warning "<actor+> Using streamer"
 		#endif
 	#endif
@@ -46,7 +48,7 @@
 
 #if defined _inc_y_iterate
 	#define USING_Y_ITERATE (1)
-	#if defined AP_DEBUG_ENABLED
+	#if defined AP_DEBUG_ENABLED && __Pawn >= 0x030A
 		#warning "<actor+> Using y_iterate"
 	#endif
 #else
@@ -57,7 +59,7 @@
 
 #if defined YSI_timer
 	#define USING_Y_TIMERS (1)
-	#if defined AP_DEBUG_ENABLED
+	#if defined AP_DEBUG_ENABLED && __Pawn >= 0x030A
 		#warning "<actor+> Using y_timers"
 	#endif
 #else
@@ -68,7 +70,7 @@
 
 #if defined PAWNRAKNET_INC_
 	#define USING_PAWN_RAKNET (1)
-	#if defined AP_DEBUG_ENABLED
+	#if defined AP_DEBUG_ENABLED && __Pawn >= 0x030A
 		#warning "<actor+> Using y_timers"
 	#endif
 #else
@@ -110,7 +112,7 @@ enum _:E_TYPE_SEARCH(<<= 1)
 #if !defined DONT_DETECT_OPTA
 	#define DEFAULT_CHECKING_TIME 	(200)
 #else
-	#if defined AP_DEBUG_ENABLED
+	#if defined AP_DEBUG_ENABLED && __Pawn >= 0x030A
 		#warning "<actor+> OnPlayerTargetActor is unavailable (from DONT_DETECT_OPTA)"
 	#endif
 #endif
@@ -162,7 +164,7 @@ enum _:E_TYPE_SEARCH(<<= 1)
 #endif
 
 #if defined OnPlayerStreamForActor
-	#if !USING_PAWN_RAKNET
+	#if !USING_PAWN_RAKNET && __Pawn >= 0x030A
 		#warning "<actor+> Pawn RakNet isn't included ; OnPlayerStreamForActor(...) won't be called."
 	#endif
 	forward OnPlayerStreamForActor(forplayerid, actorid, actor_flags, bool:IsDynamicActor);
@@ -1151,9 +1153,7 @@ S->IsActorDead(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 	{
 		if(!IsValidDynamicActor(actorid))
 			return 0;
-		#if defined OnDynamicActorInteriorChange
-			OnDynamicActorInteriorChange(actorid, Actors_Plus[actorid][DYNAMIC_CATEGORY][eapInt], interiorid);
-		#endif
+		CallRemoteFunction("OnDynamicActorInteriorChange", "iii", actorid, Actors_Plus[actorid][DYNAMIC_CATEGORY][eapInt], interiorid);
 		Actors_Plus[actorid][DYNAMIC_CATEGORY][eapInt] = interiorid;
 		return RecreateActor(actorid);
 	}
@@ -2110,9 +2110,7 @@ static stock Internal_Update3DActorTextLabel(actorid, bool:isdynamic = DEFAULT_I
 	{
 		if(!SetDynamicActorVirtualWorld(actorid, vworld))
 			return 0;
-		#if defined OnActorVirtualWorldChange
-			OnActorVirtualWorldChange(actorid, Actors_Plus[actorid][DYNAMIC_CATEGORY][eapVW], vworld, true);
-		#endif
+		CallRemoteFunction("OnActorVirtualWorldChange", "iiii", actorid, Actors_Plus[actorid][DYNAMIC_CATEGORY][eapVW], vworld, true);
 		Actors_Plus[actorid][DYNAMIC_CATEGORY][eapVW] = vworld;
 		return 1;
 	}
@@ -2272,9 +2270,7 @@ stock AP_SetActorVirtualWorld(actorid, vworld)
 {
 	if(!SetActorVirtualWorld(actorid, vworld))
 		return 0;
-	#if defined OnActorVirtualWorldChange
-		OnActorVirtualWorldChange(actorid, Actors_Plus[actorid][STATIC_CATEGORY][eapVW], vworld, false);
-	#endif
+	CallRemoteFunction("OnActorVirtualWorldChange", "iiii", actorid, Actors_Plus[actorid][STATIC_CATEGORY][eapVW], vworld, false);
 	Actors_Plus[actorid][STATIC_CATEGORY][eapVW] = vworld;
 	return 1;
 }

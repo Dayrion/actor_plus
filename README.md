@@ -2,7 +2,7 @@
 An include with a bunch of useful functions and callback for actors.
 Functions returning 1 on success, 0 on failure or cellmin for specific failure. Please, check the wiki for more specific informations.
 
-***Actual version:*** *public - beta v3.1.0*
+***Actual version:*** *public - beta v3.2.0*
 
 ## Documentation
 ### Constant
@@ -14,7 +14,7 @@ Functions returning 1 on success, 0 on failure or cellmin for specific failure. 
 * `DEFAULT_ACTOR_REPLACEMENT`: Time before an actor is being re-placed at his old position.
 * `AP_DEBUG_ENABLED`: If some debugs printed messages are needed
 * `MAX_ANIMATION_LIBRARY_LENGTH`: Maximum animation library length name
-* `MAX_ANIMATION_NAME_LENGTH`: Maximum animation length name (need to be modified)
+* `MAX_ANIMATION_NAME_LENGTH`: Maximum animation length name
 * `DEFAULT_IS_DYNAMIC_PARAMETER`: Set to `true` if streamer is included otherwise, it set to `false`
 
 #### Can be redefined
