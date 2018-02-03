@@ -3,7 +3,7 @@
 
 		Include started at 19/01/18.
 		-Dayrion
-		Public version - beta v3.2.0
+		Public version - beta v3.2.1
 */
 
 
@@ -605,11 +605,11 @@ public OnPlayerText(playerid, text[])
 		ptask AP_AimingActor[DEFAULT_CHECKING_TIME](playerid)
 		{
 			new actorid = GetPlayerTargetActor(playerid);
-			if(actorid != INVALID_ACTOR_ID && Player_Attributes[i][appTargetid] != actorid)
+			if(actorid != INVALID_ACTOR_ID && Player_Attributes[playerid][appTargetid] != actorid)
 			{
 				Player_Attributes[playerid][appTargetid] = actorid;
 				#if defined OnPlayerTargetActor
-					OnPlayerTargetActor(i, actorid, GetPlayerWeapon(i));
+					OnPlayerTargetActor(playerid, actorid, GetPlayerWeapon(playerid));
 				#endif
 			}
 			return 1;	
