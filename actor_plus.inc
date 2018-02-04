@@ -3,7 +3,7 @@
 
 		Include started at 19/01/18.
 		-Dayrion
-		Public version - beta v3.2.1
+		Public version - v3.3.0
 */
 
 
@@ -239,8 +239,6 @@ enum E_ACTOR_PLUS_FLAGS (<<= 1)
 
 enum E_PLAYER_ACTOR
 {
-	appTargetid,
-
 	appAnimLib[MAX_ANIMATION_LIBRARY_LENGTH],
 	appLibLength,
 	appAnimName[MAX_ANIMATION_NAME_LENGTH],
@@ -275,15 +273,16 @@ enum _:E_PLAYER_AP_FLAGS(<<= 1)
 
 // =======================================================================================================================================================================================
 // =======================================================================================================================================================================================
-
-static
+stock static
 	// Actors
 	Actors_Plus[MAX_ACTORS][2][E_ACTOR_PLUS_DATA],
 	E_ACTOR_PLUS_FLAGS:Actors_Flags[MAX_ACTORS][2],
 	Internal_ActorsID[MAX_ACTORS][2] = {{INVALID_ACTOR_ID, ALL_VALUES_INCLUDED}, {INVALID_ACTOR_ID, ALL_VALUES_INCLUDED}, ...},
 
 	// Players
-	Player_Attributes[MAX_PLAYERS][E_PLAYER_ACTOR] = {INVALID_ACTOR_ID, INVALID_ACTOR_ID, INVALID_ACTOR_ID, ...},
+	PAttributes_StaticActor[MAX_PLAYERS][MAX_ACTORS][E_PLAYER_ACTOR], // Avoiding to create an 4D array which should be Player_Attributes[MAX_PLAYERS][MAX_ACTORS][2][E_PLAYER_ACTOR]
+	PAttributes_DynamicActor[MAX_PLAYERS][MAX_ACTORS][E_PLAYER_ACTOR],
+	Player_Actor_Target[MAX_PLAYERS] = {INVALID_ACTOR_ID, INVALID_ACTOR_ID, ...},
 	Player_Flags[MAX_PLAYERS][2][MAX_ACTORS];
 
 
@@ -471,7 +470,7 @@ public OnPlayerGiveDamageDynamicActor(playerid, STREAMER_TAG_ACTOR actorid, Floa
 
 public OnPlayerConnect(playerid)
 {
-	Player_Attributes[playerid][appTargetid] = INVALID_ACTOR_ID;
+	Player_Actor_Target[playerid] = INVALID_ACTOR_ID;
 	new reset_player_actors_flags[MAX_ACTORS] = {(HIDE_TYPE_NONE | ANIMATION_PLAY_NONE | FAKE_POSITION_NONE), (HIDE_TYPE_NONE | ANIMATION_PLAY_NONE | FAKE_POSITION_NONE), ...};
 	Player_Flags[playerid][STATIC_CATEGORY] = reset_player_actors_flags;
 	Player_Flags[playerid][DYNAMIC_CATEGORY] = reset_player_actors_flags;
@@ -519,8 +518,7 @@ public OnPlayerText(playerid, text[])
 	forward AP_OnPlayerText(playerid, text[]);
 #endif
 
-
-#endif
+#endif // if defined OnPlayerTextNearActor
 
 // =====================================================================================
 
@@ -533,9 +531,9 @@ public OnPlayerText(playerid, text[])
 				foreach(new i : Player)
 				{
 					new actorid = GetPlayerTargetActor(i);
-					if(actorid != INVALID_ACTOR_ID && Player_Attributes[i][appTargetid] != actorid)
+					if(actorid != INVALID_ACTOR_ID && Player_Actor_Target[i] != actorid)
 					{
-						Player_Attributes[i][appTargetid] = actorid;
+						Player_Actor_Target[i] = actorid;
 						#if defined OnPlayerTargetActor
 							OnPlayerTargetActor(i, actorid, GetPlayerWeapon(i));
 						#endif
@@ -545,9 +543,9 @@ public OnPlayerText(playerid, text[])
 				for(new i, j = GetPlayerPoolSize(); i <= j; i++)
 				{
 					new actorid = GetPlayerTargetActor(i);
-					if(actorid != INVALID_ACTOR_ID && Player_Attributes[i][appTargetid] != actorid)
+					if(actorid != INVALID_ACTOR_ID && Player_Actor_Target[i] != actorid)
 					{
-						Player_Attributes[i][appTargetid] = actorid;
+						Player_Actor_Target[i] = actorid;
 						#if defined OnPlayerTargetActor
 							OnPlayerTargetActor(i, actorid, GetPlayerWeapon(i));
 						#endif
@@ -605,9 +603,9 @@ public OnPlayerText(playerid, text[])
 		ptask AP_AimingActor[DEFAULT_CHECKING_TIME](playerid)
 		{
 			new actorid = GetPlayerTargetActor(playerid);
-			if(actorid != INVALID_ACTOR_ID && Player_Attributes[playerid][appTargetid] != actorid)
+			if(actorid != INVALID_ACTOR_ID && Player_Actor_Target[playerid] != actorid)
 			{
-				Player_Attributes[playerid][appTargetid] = actorid;
+				Player_Actor_Target[playerid] = actorid;
 				#if defined OnPlayerTargetActor
 					OnPlayerTargetActor(playerid, actorid, GetPlayerWeapon(playerid));
 				#endif
@@ -1191,7 +1189,7 @@ S->IsPlayerInRangeOfActor(playerid, actorid, Float:range = 2.0, bool:isdynamic =
 }
 
 S->IsPlayerAimingActor(playerid, actorid)
-	return (Player_Attributes[playerid][appTargetid] == actorid);
+	return (Player_Actor_Target[playerid] == actorid);
 
 S->IsActorInPlayerFacingAngle(playerid, actorid, Float:max_angle = 90.0, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
@@ -1281,7 +1279,7 @@ S->GetNearestActorForPlayer(playerid, &bool:isdynamic = false, type = SEARCH_TYP
 		#if USING_STREAMER
 			if(type & SEARCH_TYPE_STATIC)
 			{
-				for(new i, j = GetActorPoolSize(); i <= j; i++)
+				for(new i, j = GetActorPoolSize(); i < j; i++)
 				{
 					if(!IsValidActor(i))
 						continue;
@@ -1314,7 +1312,7 @@ S->GetNearestActorForPlayer(playerid, &bool:isdynamic = false, type = SEARCH_TYP
 		#else
 			if(type & SEARCH_TYPE_STATIC)
 			{
-				for(new i, j = GetActorPoolSize(); i <= j; i++)
+				for(new i, j = GetActorPoolSize(); i < j; i++)
 				{
 					if(!IsValidActor(i))
 						continue;
@@ -1367,7 +1365,7 @@ S->GetNearestActorByCoord(Float:x, Float:y, Float:z, &bool:isdynamic = false, ty
 		#else
 			if(type & SEARCH_TYPE_STATIC)
 			{
-				for(new i, j = GetActorPoolSize(); i <= j; i++)
+				for(new i, j = GetActorPoolSize(); i < j; i++)
 				{
 					if(!IsValidActor(i))
 						continue;
@@ -1416,7 +1414,7 @@ S->GetNearestActorByCoord(Float:x, Float:y, Float:z, &bool:isdynamic = false, ty
 		#else
 			if(type & SEARCH_TYPE_STATIC)
 			{
-				for(new i, j = GetActorPoolSize(); i <= j; i++)
+				for(new i, j = GetActorPoolSize(); i < j; i++)
 				{
 					if(!IsValidActor(i))
 						continue;
@@ -1529,7 +1527,7 @@ S->RemoveAllHiddenActorForPlayer(playerid)
 		#endif // if USING_STREAMER
 	#else
 		#if USING_STREAMER
-			for(new i, j = GetActorPoolSize(); i <= j; i++)
+			for(new i, j = GetActorPoolSize(); i < j; i++)
 			{
 				if(IsValidDynamicActor(i))
 				{
@@ -1543,7 +1541,7 @@ S->RemoveAllHiddenActorForPlayer(playerid)
 				}
 			}
 		#else
-			for(new i, j = GetActorPoolSize(); i <= j; i++)
+			for(new i, j = GetActorPoolSize(); i < j; i++)
 			{
 				if((Player_Flags[playerid][STATIC_CATEGORY][i] & HIDE_TYPE_ONE_TIME) || (Player_Flags[playerid][STATIC_CATEGORY][i] & HIDE_TYPE_PERMANENT))
 					Player_Flags[playerid][STATIC_CATEGORY][i] = Player_Flags[playerid][STATIC_CATEGORY][i] & ~(HIDE_TYPE_ONE_TIME | HIDE_TYPE_PERMANENT);	
@@ -1563,36 +1561,51 @@ S->ApplyActorAnimationForPlayer(forplayerid, actorid, repeated_animation, animli
 
 	Player_Flags[forplayerid][isdynamic][actorid] = Player_Flags[forplayerid][isdynamic][actorid] & ~(ANIMATION_PLAY_ONE_TIME | ANIMATION_PLAY_PERMANENT) | repeated_animation;
 
-	strcpy(Player_Attributes[forplayerid][appAnimLib], animlib, MAX_ANIMATION_LIBRARY_LENGTH);
-	strcpy(Player_Attributes[forplayerid][appAnimName], animname, MAX_ANIMATION_NAME_LENGTH);
-	Player_Attributes[forplayerid][appLibLength] = strlen(animlib);
-	Player_Attributes[forplayerid][appAnimLength] = strlen(animname);
-	Player_Attributes[forplayerid][appDelta] = fDelta;
-	Player_Attributes[forplayerid][appDelta] = fDelta;
-	Player_Attributes[forplayerid][appLoop] = loop;
-	Player_Attributes[forplayerid][appLockx] = lockx;
-	Player_Attributes[forplayerid][appLocky] = locky;
-	Player_Attributes[forplayerid][appFreeze] = freeze;
-	Player_Attributes[forplayerid][appTime] = time;
-
-	if(isdynamic)
+	if(!isdynamic)
+	{
+		strcpy(PAttributes_StaticActor[forplayerid][actorid][appAnimLib], animlib, MAX_ANIMATION_LIBRARY_LENGTH);
+		strcpy(PAttributes_StaticActor[forplayerid][actorid][appAnimName], animname, MAX_ANIMATION_NAME_LENGTH);
+		PAttributes_StaticActor[forplayerid][actorid][appLibLength] = strlen(animlib);
+		PAttributes_StaticActor[forplayerid][actorid][appAnimLength] = strlen(animname);
+		PAttributes_StaticActor[forplayerid][actorid][appDelta] = fDelta;
+		PAttributes_StaticActor[forplayerid][actorid][appDelta] = fDelta;
+		PAttributes_StaticActor[forplayerid][actorid][appLoop] = loop;
+		PAttributes_StaticActor[forplayerid][actorid][appLockx] = lockx;
+		PAttributes_StaticActor[forplayerid][actorid][appLocky] = locky;
+		PAttributes_StaticActor[forplayerid][actorid][appFreeze] = freeze;
+		PAttributes_StaticActor[forplayerid][actorid][appTime] = time;
+	}
+	else
+	{
+		strcpy(PAttributes_DynamicActor[forplayerid][actorid][appAnimLib], animlib, MAX_ANIMATION_LIBRARY_LENGTH);
+		strcpy(PAttributes_DynamicActor[forplayerid][actorid][appAnimName], animname, MAX_ANIMATION_NAME_LENGTH);
+		PAttributes_DynamicActor[forplayerid][actorid][appLibLength] = strlen(animlib);
+		PAttributes_DynamicActor[forplayerid][actorid][appAnimLength] = strlen(animname);
+		PAttributes_DynamicActor[forplayerid][actorid][appDelta] = fDelta;
+		PAttributes_DynamicActor[forplayerid][actorid][appDelta] = fDelta;
+		PAttributes_DynamicActor[forplayerid][actorid][appLoop] = loop;
+		PAttributes_DynamicActor[forplayerid][actorid][appLockx] = lockx;
+		PAttributes_DynamicActor[forplayerid][actorid][appLocky] = locky;
+		PAttributes_DynamicActor[forplayerid][actorid][appFreeze] = freeze;
+		PAttributes_DynamicActor[forplayerid][actorid][appTime] = time;
 		actorid = GetRealActorID(actorid);
+	}
 
 	new BitStream:bit_stream = BS_New(); 
 	BS_WriteValue(bit_stream,
 		PR_UINT16, actorid,
-		PR_UINT8, Player_Attributes[forplayerid][appLibLength],
-		PR_STRING, Player_Attributes[forplayerid][appAnimLib],
+		PR_UINT8, strlen(animlib),
+		PR_STRING, animlib,
 
-		PR_UINT8, Player_Attributes[forplayerid][appAnimLength],
-		PR_STRING, Player_Attributes[forplayerid][appAnimName],
+		PR_UINT8, strlen(animname),
+		PR_STRING, animname,
 
-		PR_FLOAT, Player_Attributes[forplayerid][appDelta],
-		PR_BOOL, Player_Attributes[forplayerid][appLoop],
-		PR_BOOL, Player_Attributes[forplayerid][appLockx],
-		PR_BOOL, Player_Attributes[forplayerid][appLocky],
-		PR_BOOL, Player_Attributes[forplayerid][appFreeze],
-		PR_UINT32, Player_Attributes[forplayerid][appTime]);
+		PR_FLOAT, fDelta,
+		PR_BOOL, loop,
+		PR_BOOL, lockx,
+		PR_BOOL, locky,
+		PR_BOOL, loop,
+		PR_UINT32, time);
 
 	BS_RPC(bit_stream, forplayerid, 0xAD); 
 	BS_Delete(bit_stream);
@@ -1628,12 +1641,20 @@ S->SetActorPosForPlayer(forplayerid, actorid, fake_position_type, Float:x, Float
 		return cellmin;
 
 	Player_Flags[forplayerid][isdynamic][actorid] = Player_Flags[forplayerid][isdynamic][actorid] & ~(FAKE_POSITION_ONE_TIME | FAKE_POSITION_PERMANENT) | fake_position_type;
-	Player_Attributes[forplayerid][appPosX] = x;
-	Player_Attributes[forplayerid][appPosY] = y;
-	Player_Attributes[forplayerid][appPosZ] = z;
 
-	if(isdynamic)
+	if(!isdynamic)
+	{
+		PAttributes_StaticActor[forplayerid][actorid][appPosX] = x;
+		PAttributes_StaticActor[forplayerid][actorid][appPosY] = y;
+		PAttributes_StaticActor[forplayerid][actorid][appPosZ] = z;
+	}
+	else
+	{
+		PAttributes_DynamicActor[forplayerid][actorid][appPosX] = x;
+		PAttributes_DynamicActor[forplayerid][actorid][appPosY] = y;
+		PAttributes_DynamicActor[forplayerid][actorid][appPosZ] = z;
 		actorid = GetRealActorID(actorid);
+	}
 
 	new BitStream:bit_stream = BS_New(); 
 	BS_WriteValue(bit_stream, 
@@ -1700,50 +1721,74 @@ public OnActorStreamIn(actorid, forplayerid)
 	{
 		APD("Applying custom (per-player) animation for actorid %i (from realid: %i).", related_actorid, actorid);
 		new BitStream:bit_stream = BS_New(); 
-		BS_WriteValue(bit_stream,
-			PR_UINT16, actorid,
 
-			PR_UINT8, Player_Attributes[forplayerid][appLibLength],
-			PR_STRING, Player_Attributes[forplayerid][appAnimLib],
+		if(isdynamic)
+		{
+			BS_WriteValue(bit_stream,
+				PR_UINT16, actorid,
 
-			PR_UINT8, Player_Attributes[forplayerid][appAnimLength],
-			PR_STRING, Player_Attributes[forplayerid][appAnimName],
+				PR_UINT8, PAttributes_DynamicActor[forplayerid][related_actorid][appLibLength],
+				PR_STRING, PAttributes_DynamicActor[forplayerid][related_actorid][appAnimLib],
 
-			PR_FLOAT, Player_Attributes[forplayerid][appDelta],
-			PR_BOOL, Player_Attributes[forplayerid][appLoop],
-			PR_BOOL, Player_Attributes[forplayerid][appLockx],
-			PR_BOOL, Player_Attributes[forplayerid][appLocky],
-			PR_BOOL, Player_Attributes[forplayerid][appFreeze],
-			PR_UINT32, Player_Attributes[forplayerid][appTime]);
+				PR_UINT8, PAttributes_DynamicActor[forplayerid][related_actorid][appAnimLength],
+				PR_STRING, PAttributes_DynamicActor[forplayerid][related_actorid][appAnimName],
 
+				PR_FLOAT, PAttributes_DynamicActor[forplayerid][related_actorid][appDelta],
+				PR_BOOL, PAttributes_DynamicActor[forplayerid][related_actorid][appLoop],
+				PR_BOOL, PAttributes_DynamicActor[forplayerid][related_actorid][appLockx],
+				PR_BOOL, PAttributes_DynamicActor[forplayerid][related_actorid][appLocky],
+				PR_BOOL, PAttributes_DynamicActor[forplayerid][related_actorid][appFreeze],
+				PR_UINT32, PAttributes_DynamicActor[forplayerid][related_actorid][appTime]);
+		}
+		else
+		{
+			BS_WriteValue(bit_stream,
+				PR_UINT16, actorid,	
+
+				PR_UINT8, PAttributes_StaticActor[forplayerid][related_actorid][appLibLength],
+				PR_STRING, PAttributes_StaticActor[forplayerid][related_actorid][appAnimLib],
+
+				PR_UINT8, PAttributes_StaticActor[forplayerid][related_actorid][appAnimLength],
+				PR_STRING, PAttributes_StaticActor[forplayerid][related_actorid][appAnimName],
+
+				PR_FLOAT, PAttributes_StaticActor[forplayerid][related_actorid][appDelta],
+				PR_BOOL, PAttributes_StaticActor[forplayerid][related_actorid][appLoop],
+				PR_BOOL, PAttributes_StaticActor[forplayerid][related_actorid][appLockx],
+				PR_BOOL, PAttributes_StaticActor[forplayerid][related_actorid][appLocky],
+				PR_BOOL, PAttributes_StaticActor[forplayerid][related_actorid][appFreeze],
+				PR_UINT32, PAttributes_StaticActor[forplayerid][related_actorid][appTime]);
+		}
 		BS_RPC(bit_stream, forplayerid, 0xAD); 
 		BS_Delete(bit_stream);
-		#if defined AP_OnActorStreamIn
-			return AP_OnActorStreamIn(actorid, forplayerid);
-		#else
-			return 1;
-		#endif
 	}
 	else if(Player_Flags[forplayerid][isdynamic][related_actorid] & ANIMATION_PLAY_ONE_TIME)
 		Player_Flags[forplayerid][isdynamic][related_actorid] &= ~ANIMATION_PLAY_ONE_TIME;
 
 	if(Player_Flags[forplayerid][isdynamic][related_actorid] & FAKE_POSITION_PERMANENT)
 	{
-		APD("Setting custom (per-player) positions for actorid %i (from realid: %i).", related_actorid, actorid);
+		APD("Setting custom (per-player) positions for actorid %i (from realid: %i). The actor is dynamic? %i", related_actorid, actorid, isdynamic);
 		new BitStream:bit_stream = BS_New(); 
-		BS_WriteValue(bit_stream, 
-			PR_UINT16, actorid,
-			PR_FLOAT, Player_Attributes[forplayerid][appPosX],
-			PR_FLOAT, Player_Attributes[forplayerid][appPosY],
-			PR_FLOAT, Player_Attributes[forplayerid][appPosZ]);
+		if(isdynamic)
+		{
+			APD("Coordinates: %.4f | %.4f | %.4f", PAttributes_DynamicActor[forplayerid][related_actorid][appPosX], PAttributes_DynamicActor[forplayerid][related_actorid][appPosY], PAttributes_DynamicActor[forplayerid][related_actorid][appPosZ]);
+			BS_WriteValue(bit_stream, 
+				PR_UINT16, actorid,
+				PR_FLOAT, PAttributes_DynamicActor[forplayerid][related_actorid][appPosX],
+				PR_FLOAT, PAttributes_DynamicActor[forplayerid][related_actorid][appPosY],
+				PR_FLOAT, PAttributes_DynamicActor[forplayerid][related_actorid][appPosZ]);
+		}
+		else
+		{
+			APD("Coordinates: %.4f | %.4f | %.4f", PAttributes_StaticActor[forplayerid][related_actorid][appPosX], PAttributes_StaticActor[forplayerid][related_actorid][appPosY], PAttributes_StaticActor[forplayerid][related_actorid][appPosZ]);
+			BS_WriteValue(bit_stream, 
+				PR_UINT16, actorid,
+				PR_FLOAT, PAttributes_StaticActor[forplayerid][related_actorid][appPosX],
+				PR_FLOAT, PAttributes_StaticActor[forplayerid][related_actorid][appPosY],
+				PR_FLOAT, PAttributes_StaticActor[forplayerid][related_actorid][appPosZ]);
+		}
 
 		BS_RPC(bit_stream, forplayerid, 0xB0); 
 		BS_Delete(bit_stream);
-		#if defined AP_OnActorStreamIn
-			return AP_OnActorStreamIn(actorid, forplayerid);
-		#else
-			return 1;
-		#endif
 	}
 	else if(Player_Flags[forplayerid][isdynamic][related_actorid] & FAKE_POSITION_ONE_TIME)
 		Player_Flags[forplayerid][isdynamic][related_actorid] &= ~FAKE_POSITION_ONE_TIME;
