@@ -3,7 +3,7 @@
 
 		Include started at 19/01/18.
 		-Dayrion
-		Public version - v3.4.0
+		Public version - v3.4.1
 */
 
 
@@ -690,7 +690,7 @@ S->RespawnActor(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 // =======================================================================================================================================================================================
 // =======================================================================================================================================================================================
 
-S->SetActorName(actorid, actor_name[], bool:display, bool:contain_id = false, bool:reformat_label = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
+S->SetActorName(actorid, const actor_name[], bool:display, bool:contain_id = false, bool:reformat_label = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
 	if(!(3 <= strlen(actor_name) <= 24))
 		return cellmin;
@@ -807,7 +807,7 @@ S->GetActorTextLabel(actorid, text[], length = sizeof(text), bool:isdynamic = DE
 #if USING_STREAMER
 S->Attach3DTextLabelToActor(actorid, const text[], bool:isdynamic, color, Float:OffsetX, Float:OffsetY, Float:OffsetZ, Float:drawdistance, testlos = 0, worldid = DEFAULT_ACTOR_VALUE, interiorid = DEFAULT_ACTOR_VALUE, playerid = DEFAULT_ACTOR_VALUE, Float:streamdistance = STREAMER_3D_TEXT_LABEL_SD, areaid = DEFAULT_ACTOR_VALUE, priority = 0, bool:store_string = true)
 #else
-S->Attach3DTextLabelToActor(actorid, text[], color, Float:OffsetX, Float:OffsetY, Float:OffsetZ, Float:drawdistance, virtualworld = DEFAULT_ACTOR_VALUE, testlos = 0, bool:store_string = true)
+S->Attach3DTextLabelToActor(actorid, const text[], color, Float:OffsetX, Float:OffsetY, Float:OffsetZ, Float:drawdistance, virtualworld = DEFAULT_ACTOR_VALUE, testlos = 0, bool:store_string = true)
 #endif
 {
 	#if !USING_STREAMER
@@ -879,7 +879,7 @@ S->ActorHasAttachedLabel(actorid, &bool:name_displayed = false, &bool:text_displ
 // =======================================================================================================================================================================================
 // =======================================================================================================================================================================================
 
-S->UpdateAttachedActor3DTextLabel(actorid, text[], color, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
+S->UpdateAttachedActor3DTextLabel(actorid, const text[], color, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
 	if(!AP_IsValidActor(actorid, isdynamic))
 		return 0;
@@ -896,7 +896,7 @@ S->UpdateAttachedActor3DTextLabel(actorid, text[], color, bool:isdynamic = DEFAU
 // =======================================================================================================================================================================================
 // =======================================================================================================================================================================================
 
-S->SetActorChatBubble(actorid, text[], color, Float:drawdistance, expiretime, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
+S->SetActorChatBubble(actorid, const text[], color, Float:drawdistance, expiretime, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
 	if(!AP_IsValidActor(actorid, isdynamic))
 		return 0;
