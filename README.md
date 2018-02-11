@@ -2,7 +2,7 @@
 An include with a bunch of useful functions and callback for actors.
 Functions returning 1 on success, 0 on failure or cellmin for specific failure. Please, check the wiki for more specific informations.
 
-***Actual version:*** *v3.3.0*
+***Actual version:*** *v3.4.1*
 
 ## Documentation
 ### Constant

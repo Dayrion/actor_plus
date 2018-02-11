@@ -3,7 +3,7 @@
 
 		Include started at 19/01/18.
 		-Dayrion
-		Public version - v3.3.0
+		Public version - v3.4.1
 */
 
 
@@ -57,7 +57,7 @@
 
 // =====================================================================================
 
-#if defined YSI_timer
+#if defined YSI_timer && defined defer
 	#define USING_Y_TIMERS (1)
 	#if defined AP_DEBUG_ENABLED && __Pawn >= 0x030A
 		#warning "<actor+> Using y_timers"
@@ -71,7 +71,7 @@
 #if defined PAWNRAKNET_INC_
 	#define USING_PAWN_RAKNET (1)
 	#if defined AP_DEBUG_ENABLED && __Pawn >= 0x030A
-		#warning "<actor+> Using y_timers"
+		#warning "<actor+> Using pawn_raknet"
 	#endif
 #else
 	#define USING_PAWN_RAKNET (0)
@@ -554,51 +554,6 @@ public OnPlayerText(playerid, text[])
 			#endif
 			return 1;
 		}
-		#if !defined FILTERSCRIPT
-			public OnGameModeInit()
-			{
-				SetTimer("@AP_AimingActor", DEFAULT_CHECKING_TIME, 1);
-				#if defined AP_OnGameModeInit
-					return AP_OnGameModeInit();
-				#else
-					return 1;
-				#endif
-			}
-
-			#if defined _ALS_OnGameModeInit
-			    #undef OnGameModeInit
-			#else
-			    #define _ALS_OnGameModeInit
-			#endif
-			#if defined AP_OnGameModeInit
-				forward AP_OnGameModeInit();
-			#endif			
-			#define OnGameModeInit AP_OnGameModeInit
-
-
-		#else
-
-			public OnFilterScriptInit()
-			{
-				SetTimer("@AP_AimingActor", DEFAULT_CHECKING_TIME, 1);
-				#if defined AP_OnFilterScriptInit
-				    return AP_OnFilterScriptInit();
-				#else
-				    return 1;
-				#endif
-			}
-
-			#if defined _ALS_OnFilterScriptInit
-			    #undef OnFilterScriptInit
-			#else
-			    #define _ALS_OnFilterScriptInit
-			#endif
-			#if defined AP_OnFilterScriptInit
-				forward AP_OnFilterScriptInit();
-			#endif
-			#define OnFilterScriptInit AP_OnFilterScriptInit
-
-		#endif
 	#else
 		ptask AP_AimingActor[DEFAULT_CHECKING_TIME](playerid)
 		{
@@ -614,6 +569,109 @@ public OnPlayerText(playerid, text[])
 		}
 	#endif // if !USING_Y_TIMERS
 #endif // if !defined DONT_DETECT_OPTA
+
+
+#if !defined FILTERSCRIPT
+	public OnGameModeInit()
+	{
+		#if !USING_Y_TIMERS && !defined DONT_DETECT_OPTA
+		SetTimer("@AP_AimingActor", DEFAULT_CHECKING_TIME, 1);
+		#endif
+
+		for(new i, j = GetActorPoolSize(); i != j; i++)
+		{
+			#if USING_STREAMER
+			if(IsValidDynamicActor(i))
+			{
+				APD("Init | Gamemode ~ Dynamic actorid %i found & added.", i);
+				Iter_Add(Dynamic_Actors, i);
+				GetDynamicActorPos(i, Actors_Plus[i][false][eapPosX], Actors_Plus[i][false][eapPosY], Actors_Plus[i][false][eapPosZ]);
+				Actors_Plus[i][false][eapVW] = GetDynamicActorVirtualWorld(i);
+				Actors_Plus[i][false][eapInvulnerable] = IsDynamicActorInvulnerable(i);
+				GetDynamicActorFacingAngle(i, Actors_Plus[i][false][eapPosAngle]);
+				GetDynamicActorHealth(i, Actors_Plus[i][false][eapHealth]);
+			}
+			else
+			#endif
+			if(IsValidActor(i))
+			{
+				APD("Init | Gamemode ~ Static actorid %i found & added.", i);
+				Iter_Add(Static_Actors, i);
+				GetActorPos(i, Actors_Plus[i][true][eapPosX], Actors_Plus[i][true][eapPosY], Actors_Plus[i][true][eapPosZ]);
+				Actors_Plus[i][true][eapVW] = GetActorVirtualWorld(i);
+				Actors_Plus[i][true][eapInvulnerable] = IsActorInvulnerable(i);
+				GetActorFacingAngle(i, Actors_Plus[i][true][eapPosAngle]);
+				GetActorHealth(i, Actors_Plus[i][true][eapHealth]);
+			}
+		}
+		#if defined AP_OnGameModeInit
+			return AP_OnGameModeInit();
+		#else
+			return 1;
+		#endif
+	}
+
+	#if defined _ALS_OnGameModeInit
+	    #undef OnGameModeInit
+	#else
+	    #define _ALS_OnGameModeInit
+	#endif
+	#if defined AP_OnGameModeInit
+		forward AP_OnGameModeInit();
+	#endif			
+	#define OnGameModeInit AP_OnGameModeInit
+#else
+	public OnFilterScriptInit()
+	{
+		#if !USING_Y_TIMERS && !defined DONT_DETECT_OPTA
+		SetTimer("@AP_AimingActor", DEFAULT_CHECKING_TIME, 1);
+		#endif
+		
+		for(new i, j = GetActorPoolSize(); i != j; i++)
+		{
+			#if USING_STREAMER
+			if(IsValidDynamicActor(i))
+			{
+				APD("Init | Filterscript ~ Dynamic actorid %i found & added.", i);
+				Iter_Add(Dynamic_Actors, i);
+				GetDynamicActorPos(i, Actors_Plus[i][false][eapPosX], Actors_Plus[i][false][eapPosY], Actors_Plus[i][false][eapPosZ]);
+				Actors_Plus[i][false][eapVW] = GetDynamicActorVirtualWorld(i);
+				Actors_Plus[i][false][eapInvulnerable] = IsDynamicActorInvulnerable(i);
+				GetDynamicActorFacingAngle(i, Actors_Plus[i][false][eapPosAngle]);
+				GetDynamicActorHealth(i, Actors_Plus[i][false][eapHealth]);
+				Actors_Plus[i][false][eapSkin] = -1;
+			}
+			else
+			#endif
+			if(IsValidActor(i))
+			{
+				APD("Init | Filterscript ~ Static actorid %i found & added.", i);
+				Iter_Add(Static_Actors, i);
+				GetActorPos(i, Actors_Plus[i][true][eapPosX], Actors_Plus[i][true][eapPosY], Actors_Plus[i][true][eapPosZ]);
+				Actors_Plus[i][true][eapVW] = GetActorVirtualWorld(i);
+				Actors_Plus[i][true][eapInvulnerable] = IsActorInvulnerable(i);
+				GetActorFacingAngle(i, Actors_Plus[i][true][eapPosAngle]);
+				GetActorHealth(i, Actors_Plus[i][true][eapHealth]);
+				Actors_Plus[i][true][eapSkin] = -1;
+			}
+		}
+		#if defined AP_OnFilterScriptInit
+		    return AP_OnFilterScriptInit();
+		#else
+		    return 1;
+		#endif
+	}
+
+	#if defined _ALS_OnFilterScriptInit
+	    #undef OnFilterScriptInit
+	#else
+	    #define _ALS_OnFilterScriptInit
+	#endif
+	#if defined AP_OnFilterScriptInit
+		forward AP_OnFilterScriptInit();
+	#endif
+	#define OnFilterScriptInit AP_OnFilterScriptInit
+#endif // !defined FILTERSCRIPT
 
 
 // =======================================================================================================================================================================================
@@ -632,7 +690,7 @@ S->RespawnActor(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 // =======================================================================================================================================================================================
 // =======================================================================================================================================================================================
 
-S->SetActorName(actorid, actor_name[], bool:display, bool:contain_id = false, bool:reformat_label = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
+S->SetActorName(actorid, const actor_name[], bool:display, bool:contain_id = false, bool:reformat_label = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
 	if(!(3 <= strlen(actor_name) <= 24))
 		return cellmin;
@@ -749,7 +807,7 @@ S->GetActorTextLabel(actorid, text[], length = sizeof(text), bool:isdynamic = DE
 #if USING_STREAMER
 S->Attach3DTextLabelToActor(actorid, const text[], bool:isdynamic, color, Float:OffsetX, Float:OffsetY, Float:OffsetZ, Float:drawdistance, testlos = 0, worldid = DEFAULT_ACTOR_VALUE, interiorid = DEFAULT_ACTOR_VALUE, playerid = DEFAULT_ACTOR_VALUE, Float:streamdistance = STREAMER_3D_TEXT_LABEL_SD, areaid = DEFAULT_ACTOR_VALUE, priority = 0, bool:store_string = true)
 #else
-S->Attach3DTextLabelToActor(actorid, text[], color, Float:OffsetX, Float:OffsetY, Float:OffsetZ, Float:drawdistance, virtualworld = DEFAULT_ACTOR_VALUE, testlos = 0, bool:store_string = true)
+S->Attach3DTextLabelToActor(actorid, const text[], color, Float:OffsetX, Float:OffsetY, Float:OffsetZ, Float:drawdistance, virtualworld = DEFAULT_ACTOR_VALUE, testlos = 0, bool:store_string = true)
 #endif
 {
 	#if !USING_STREAMER
@@ -821,7 +879,7 @@ S->ActorHasAttachedLabel(actorid, &bool:name_displayed = false, &bool:text_displ
 // =======================================================================================================================================================================================
 // =======================================================================================================================================================================================
 
-S->UpdateAttachedActor3DTextLabel(actorid, text[], color, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
+S->UpdateAttachedActor3DTextLabel(actorid, const text[], color, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
 	if(!AP_IsValidActor(actorid, isdynamic))
 		return 0;
@@ -838,7 +896,7 @@ S->UpdateAttachedActor3DTextLabel(actorid, text[], color, bool:isdynamic = DEFAU
 // =======================================================================================================================================================================================
 // =======================================================================================================================================================================================
 
-S->SetActorChatBubble(actorid, text[], color, Float:drawdistance, expiretime, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
+S->SetActorChatBubble(actorid, const text[], color, Float:drawdistance, expiretime, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
 	if(!AP_IsValidActor(actorid, isdynamic))
 		return 0;
@@ -1947,8 +2005,9 @@ static S->RecreateActor(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 
 static S->AP_IsValidActor(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
+	if(Actors_Plus[actorid][isdynamic][eapSkin] == -1)
+		return 0;
 	#if !USING_STREAMER
-		#pragma unused isdynamic
 		#if USING_Y_ITERATE
 			if(!Iter_Contains(Static_Actors, actorid))
 				return 0;
