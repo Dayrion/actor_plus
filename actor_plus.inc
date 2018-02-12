@@ -343,7 +343,7 @@ public OnPlayerGiveDamageActor(playerid, damaged_actorid, Float:amount, weaponid
 
 	if(GetNearestActorByCoord(fHitPosX, fHitPosY, fHitPosZ, .type = SEARCH_TYPE_STATIC) == damaged_actorid)
 	{
-		new bool:death = ((Actors_Plus[damaged_actorid][STATIC_CATEGORY][eapHealth] -= amount) <= 0.0);
+		new bool:death = ((Actors_Plus[damaged_actorid][STATIC_CATEGORY][eapHealth] - amount) <= 0.0);
 		
 		#if defined OnPlayerMakeDamageToActor
 
@@ -585,11 +585,11 @@ public OnPlayerText(playerid, text[])
 			{
 				APD("Init | Gamemode ~ Dynamic actorid %i found & added.", i);
 				Iter_Add(Dynamic_Actors, i);
-				GetDynamicActorPos(i, Actors_Plus[i][false][eapPosX], Actors_Plus[i][false][eapPosY], Actors_Plus[i][false][eapPosZ]);
-				Actors_Plus[i][false][eapVW] = GetDynamicActorVirtualWorld(i);
-				Actors_Plus[i][false][eapInvulnerable] = IsDynamicActorInvulnerable(i);
-				GetDynamicActorFacingAngle(i, Actors_Plus[i][false][eapPosAngle]);
-				GetDynamicActorHealth(i, Actors_Plus[i][false][eapHealth]);
+				GetDynamicActorPos(i, Actors_Plus[i][DYNAMIC_CATEGORY][eapPosX], Actors_Plus[i][DYNAMIC_CATEGORY][eapPosY], Actors_Plus[i][DYNAMIC_CATEGORY][eapPosZ]);
+				Actors_Plus[i][DYNAMIC_CATEGORY][eapVW] = GetDynamicActorVirtualWorld(i);
+				Actors_Plus[i][DYNAMIC_CATEGORY][eapInvulnerable] = IsDynamicActorInvulnerable(i);
+				GetDynamicActorFacingAngle(i, Actors_Plus[i][DYNAMIC_CATEGORY][eapPosAngle]);
+				GetDynamicActorHealth(i, Actors_Plus[i][DYNAMIC_CATEGORY][eapHealth]);
 			}
 			else
 			#endif
@@ -597,11 +597,11 @@ public OnPlayerText(playerid, text[])
 			{
 				APD("Init | Gamemode ~ Static actorid %i found & added.", i);
 				Iter_Add(Static_Actors, i);
-				GetActorPos(i, Actors_Plus[i][true][eapPosX], Actors_Plus[i][true][eapPosY], Actors_Plus[i][true][eapPosZ]);
-				Actors_Plus[i][true][eapVW] = GetActorVirtualWorld(i);
-				Actors_Plus[i][true][eapInvulnerable] = IsActorInvulnerable(i);
-				GetActorFacingAngle(i, Actors_Plus[i][true][eapPosAngle]);
-				GetActorHealth(i, Actors_Plus[i][true][eapHealth]);
+				GetActorPos(i, Actors_Plus[i][STATIC_CATEGORY][eapPosX], Actors_Plus[i][STATIC_CATEGORY][eapPosY], Actors_Plus[i][STATIC_CATEGORY][eapPosZ]);
+				Actors_Plus[i][STATIC_CATEGORY][eapVW] = GetActorVirtualWorld(i);
+				Actors_Plus[i][STATIC_CATEGORY][eapInvulnerable] = IsActorInvulnerable(i);
+				GetActorFacingAngle(i, Actors_Plus[i][STATIC_CATEGORY][eapPosAngle]);
+				GetActorHealth(i, Actors_Plus[i][STATIC_CATEGORY][eapHealth]);
 			}
 		}
 		#if defined AP_OnGameModeInit
