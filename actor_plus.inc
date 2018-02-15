@@ -3,7 +3,7 @@
 
 		Include started at 19/01/18.
 		-Dayrion
-		Public version - v4.0.1
+		Public version - v4.1.2
 */
 
 
@@ -141,6 +141,10 @@ enum _:E_TYPE_SEARCH(<<= 1)
 	#define DEFAULT_ACTOR_COLOR (0xFFFFFFFF)
 #endif
 
+#if !defined DEFAULT_ACTOR_COLOR_NAME
+	#define DEFAULT_ACTOR_COLOR_NAME (0x6699FFFF)
+#endif
+
 // =====================================================================================
 
 #if defined OnPlayerShotActor
@@ -220,6 +224,7 @@ enum E_ACTOR_PLUS_DATA
 	Text3D:eapLabel,
 	eapLabelText[MAX_ACTOR_LABEL_LENGTH],
 	eapLabelColor,
+	eapLabelNameColor,
 	Float:eapLabelPosX,
 	Float:eapLabelPosY,
 	Float:eapLabelPosZ,
@@ -293,6 +298,11 @@ stock static
 	new
 		Iterator:Dynamic_Actor<MAX_ACTORS>;
 #endif
+
+// =====================================================================================
+
+#define ActorHasNameDisplayed(%0,%1) (Actors_Flags[%0][%1] & HAS_NAME_DISPLAYED)
+#define ActorHasTextDisplayed(%0,%1) (Actors_Flags[%0][%1] & HAS_TEXT_DISPLAYED)
 
 // =======================================================================================================================================================================================
 // =======================================================================================================================================================================================
@@ -719,8 +729,6 @@ S->RespawnActor(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 	return 1;
 }
 
-
-// =======================================================================================================================================================================================
 // =======================================================================================================================================================================================
 
 S->SetActorName(actorid, const actor_name[], bool:display, bool:contain_id = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
@@ -742,6 +750,14 @@ S->SetActorName(actorid, const actor_name[], bool:display, bool:contain_id = fal
 			Actors_Flags[actorid][STATIC_CATEGORY] |= HAS_NAME_DISPLAYED;
 		else
 			Actors_Flags[actorid][STATIC_CATEGORY] &= ~HAS_NAME_DISPLAYED;
+		
+		if(!Actors_Plus[actorid][STATIC_CATEGORY][eapLabelNameColor])
+			Actors_Plus[actorid][STATIC_CATEGORY][eapLabelNameColor] = DEFAULT_ACTOR_COLOR_NAME;
+
+		if(!Actors_Plus[actorid][STATIC_CATEGORY][eapLabelColor])
+			Actors_Plus[actorid][STATIC_CATEGORY][eapLabelColor] = DEFAULT_ACTOR_COLOR;
+
+		strcpy(Actors_Plus[actorid][STATIC_CATEGORY][eapName], formatted_name);
 
 		if(!(Actors_Flags[actorid][STATIC_CATEGORY] & HAS_TEXT_DISPLAYED))
 		{
@@ -753,20 +769,16 @@ S->SetActorName(actorid, const actor_name[], bool:display, bool:contain_id = fal
 		if(!Actors_Plus[actorid][STATIC_CATEGORY][eapLabelDrawDistance])
 			Actors_Plus[actorid][STATIC_CATEGORY][eapLabelDrawDistance] = DEFAULT_ACTOR_DRAW_DISTANCE;
 
-		strcpy(Actors_Plus[actorid][STATIC_CATEGORY][eapName], formatted_name);
-		if(!Actors_Plus[actorid][STATIC_CATEGORY][eapLabelColor])
-			Actors_Plus[actorid][STATIC_CATEGORY][eapLabelColor] = DEFAULT_ACTOR_COLOR;
-
 		if(Actors_Plus[actorid][STATIC_CATEGORY][eapLabel] != Text3D:INVALID_3DTEXT_ID)
 		{
 			new other_string[MAX_PLAYER_NAME + MAX_ACTOR_LABEL_LENGTH];
-			format(other_string, sizeof(other_string), "%s\n{%x}%s", formatted_name, (Actors_Plus[actorid][STATIC_CATEGORY][eapLabelColor] >>> 8), Actors_Plus[actorid][STATIC_CATEGORY][eapLabelText]);
+			format(other_string, sizeof(other_string), "%s\n{%x}%s", formatted_name, (Actors_Plus[actorid][STATIC_CATEGORY][eapLabelNameColor] >>> 8), Actors_Plus[actorid][STATIC_CATEGORY][eapLabelText]);
 			if(display)
-				return Attach3DTextLabelToActor(actorid, other_string, DEFAULT_ACTOR_COLOR, Actors_Plus[actorid][STATIC_CATEGORY][eapLabelPosX], Actors_Plus[actorid][STATIC_CATEGORY][eapLabelPosY], Actors_Plus[actorid][STATIC_CATEGORY][eapLabelPosZ], Actors_Plus[actorid][STATIC_CATEGORY][eapLabelDrawDistance], .store_string = false);
+				return Attach3DTextLabelToActor(actorid, other_string, Actors_Plus[actorid][STATIC_CATEGORY][eapLabelColor], Actors_Plus[actorid][STATIC_CATEGORY][eapLabelPosX], Actors_Plus[actorid][STATIC_CATEGORY][eapLabelPosY], Actors_Plus[actorid][STATIC_CATEGORY][eapLabelPosZ], Actors_Plus[actorid][STATIC_CATEGORY][eapLabelDrawDistance], .store_string = false);
 			
 		}
 		else if(display)
-			return Attach3DTextLabelToActor(actorid, formatted_name, DEFAULT_ACTOR_COLOR, Actors_Plus[actorid][STATIC_CATEGORY][eapLabelPosX], Actors_Plus[actorid][STATIC_CATEGORY][eapLabelPosY], Actors_Plus[actorid][STATIC_CATEGORY][eapLabelPosZ], Actors_Plus[actorid][STATIC_CATEGORY][eapLabelDrawDistance], .store_string = false);
+			return Attach3DTextLabelToActor(actorid, formatted_name, Actors_Plus[actorid][STATIC_CATEGORY][eapLabelNameColor], Actors_Plus[actorid][STATIC_CATEGORY][eapLabelPosX], Actors_Plus[actorid][STATIC_CATEGORY][eapLabelPosY], Actors_Plus[actorid][STATIC_CATEGORY][eapLabelPosZ], Actors_Plus[actorid][STATIC_CATEGORY][eapLabelDrawDistance], .store_string = false);
 	
 	#else
 		if(display)
@@ -774,35 +786,37 @@ S->SetActorName(actorid, const actor_name[], bool:display, bool:contain_id = fal
 		else
 			Actors_Flags[actorid][isdynamic] &= ~HAS_NAME_DISPLAYED;
 
+		if(!Actors_Plus[actorid][isdynamic][eapLabelNameColor])
+			Actors_Plus[actorid][isdynamic][eapLabelNameColor] = DEFAULT_ACTOR_COLOR_NAME;
+
 		if(!Actors_Plus[actorid][isdynamic][eapLabelColor])
 			Actors_Plus[actorid][isdynamic][eapLabelColor] = DEFAULT_ACTOR_COLOR;
+
 		strcpy(Actors_Plus[actorid][isdynamic][eapName], formatted_name);
 
-		if(!Actors_Plus[actorid][isdynamic][eapLabelDrawDistance])
-			Actors_Plus[actorid][isdynamic][eapLabelDrawDistance] = DEFAULT_ACTOR_DRAW_DISTANCE;
-
-		if(!(Actors_Flags[actorid][STATIC_CATEGORY] & HAS_TEXT_DISPLAYED))
+		if(!(Actors_Flags[actorid][isdynamic] & HAS_TEXT_DISPLAYED))
 		{
 			Actors_Plus[actorid][isdynamic][eapLabelPosX] = 
 			Actors_Plus[actorid][isdynamic][eapLabelPosY] = 0.0;
 			Actors_Plus[actorid][isdynamic][eapLabelPosZ] = 1.0;
 		}
 
+		if(!Actors_Plus[actorid][isdynamic][eapLabelDrawDistance])
+			Actors_Plus[actorid][isdynamic][eapLabelDrawDistance] = DEFAULT_ACTOR_DRAW_DISTANCE;
+
 		if(Actors_Plus[actorid][isdynamic][eapLabel] != Text3D:INVALID_3DTEXT_ID)
 		{
 			new other_string[MAX_PLAYER_NAME + MAX_ACTOR_LABEL_LENGTH];
-			format(other_string, sizeof(other_string), "%s\n{%x}%s", formatted_name, (Actors_Plus[actorid][isdynamic][eapLabelColor] >>> 8), Actors_Plus[actorid][isdynamic][eapLabelText]);
+			format(other_string, sizeof(other_string), "%s\n{%x}%s", formatted_name, (Actors_Plus[actorid][isdynamic][eapLabelNameColor] >>> 8), Actors_Plus[actorid][isdynamic][eapLabelText]);
 			if(display)
-				return Attach3DTextLabelToActor(actorid, other_string, isdynamic, DEFAULT_ACTOR_COLOR, Actors_Plus[actorid][isdynamic][eapLabelPosX], Actors_Plus[actorid][isdynamic][eapLabelPosY], Actors_Plus[actorid][isdynamic][eapLabelPosZ], Actors_Plus[actorid][isdynamic][eapLabelDrawDistance], .store_string = false);
+				return Attach3DTextLabelToActor(actorid, other_string, isdynamic, Actors_Plus[actorid][isdynamic][eapLabelColor], Actors_Plus[actorid][isdynamic][eapLabelPosX], Actors_Plus[actorid][isdynamic][eapLabelPosY], Actors_Plus[actorid][isdynamic][eapLabelPosZ], Actors_Plus[actorid][isdynamic][eapLabelDrawDistance], .store_string = false);
 		}
 		else if(display)
-			return Attach3DTextLabelToActor(actorid, formatted_name, isdynamic, DEFAULT_ACTOR_COLOR, Actors_Plus[actorid][isdynamic][eapLabelPosX], Actors_Plus[actorid][isdynamic][eapLabelPosY], Actors_Plus[actorid][isdynamic][eapLabelPosZ], Actors_Plus[actorid][isdynamic][eapLabelDrawDistance], .store_string = false);
-
+			return Attach3DTextLabelToActor(actorid, formatted_name, isdynamic, Actors_Plus[actorid][isdynamic][eapLabelNameColor], Actors_Plus[actorid][isdynamic][eapLabelPosX], Actors_Plus[actorid][isdynamic][eapLabelPosY], Actors_Plus[actorid][isdynamic][eapLabelPosZ], Actors_Plus[actorid][isdynamic][eapLabelDrawDistance], .store_string = false);
 	#endif
 	return 1;
 }
 
-// =======================================================================================================================================================================================
 // =======================================================================================================================================================================================
 
 S->GetActorName(actorid, actor_name[],  length = sizeof(actor_name), bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
@@ -818,7 +832,6 @@ S->GetActorName(actorid, actor_name[],  length = sizeof(actor_name), bool:isdyna
 }
 
 // =======================================================================================================================================================================================
-// =======================================================================================================================================================================================
 
 S->GetActorTextLabel(actorid, text[], length = sizeof(text), bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
@@ -833,7 +846,9 @@ S->GetActorTextLabel(actorid, text[], length = sizeof(text), bool:isdynamic = DE
 	return 1;
 }
 
-S->GetActorColorLabel(actorid, bool:ToRGB = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
+// =======================================================================================================================================================================================
+
+S->GetActorLabelColor(actorid, bool:ToRGB = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
 	if(!AP_IsValidActor(actorid, isdynamic))
 		return 0;
@@ -844,6 +859,65 @@ S->GetActorColorLabel(actorid, bool:ToRGB = false, bool:isdynamic = DEFAULT_IS_D
 }
 
 // =======================================================================================================================================================================================
+
+S->GetActorNameColor(actorid, bool:ToRGB = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
+{
+	if(!AP_IsValidActor(actorid, isdynamic))
+		return 0;
+	if(ToRGB)
+		return (Actors_Plus[actorid][isdynamic][eapLabelNameColor] >>> 8);
+	else
+		return Actors_Plus[actorid][isdynamic][eapLabelNameColor];
+}
+
+// =======================================================================================================================================================================================
+
+S->SetActorLabelColor(actorid, color, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
+{
+	if(!AP_IsValidActor(actorid, isdynamic))
+		return 0;
+
+	if(isnull(Actors_Plus[actorid][isdynamic][eapLabelText]))
+		return cellmin;
+	
+	#if USING_Y_TIMERS
+		if(_:Actors_Plus[actorid][isdynamic][eapTimerChatBubble])
+			return cellmin;
+	#else
+		if(Actors_Plus[actorid][isdynamic][eapTimerChatBubble])
+			return cellmin;
+	#endif
+	Actors_Plus[actorid][isdynamic][eapLabelColor] = color;
+	if(ActorHasTextDisplayed(actorid, isdynamic))
+		return Internal_Update3DActorTextLabel(actorid, isdynamic);
+	else
+		return 1;
+}
+
+// =======================================================================================================================================================================================
+
+S->SetActorNameColor(actorid, color, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
+{
+	if(!AP_IsValidActor(actorid, isdynamic))
+		return 0;
+
+	if(isnull(Actors_Plus[actorid][isdynamic][eapName]))
+		return cellmin;
+	
+	#if USING_Y_TIMERS
+		if(_:Actors_Plus[actorid][isdynamic][eapTimerChatBubble])
+			return cellmin;
+	#else
+		if(Actors_Plus[actorid][isdynamic][eapTimerChatBubble])
+			return cellmin;
+	#endif
+	Actors_Plus[actorid][isdynamic][eapLabelNameColor] = color;
+	if(ActorHasNameDisplayed(actorid, isdynamic))
+		return Internal_Update3DActorTextLabel(actorid, isdynamic);
+	else
+		return 1;
+}
+
 // =======================================================================================================================================================================================
 
 #if USING_STREAMER
@@ -876,13 +950,13 @@ S->Attach3DTextLabelToActor(actorid, text[], color, Float:OffsetX, Float:OffsetY
 			if(_:Actors_Plus[actorid][STATIC_CATEGORY][eapTimerChatBubble])
 			{
 				APD("[Attach3DTextLabelToActor] -> Returned 2 due to a running timer (timerid: %i).", Actors_Plus[actorid][STATIC_CATEGORY][eapTimerChatBubble]);
-				return 2;
+				return cellmin;
 			}
 		#else
 			if(Actors_Plus[actorid][STATIC_CATEGORY][eapTimerChatBubble])
 			{
 				APD("[Attach3DTextLabelToActor] -> Returned 2 due to a running timer (timerid: %i).", Actors_Plus[actorid][STATIC_CATEGORY][eapTimerChatBubble]);
-				return 2;
+				return cellmin;
 			}
 		#endif
 
@@ -913,13 +987,13 @@ S->Attach3DTextLabelToActor(actorid, text[], color, Float:OffsetX, Float:OffsetY
 			if(_:Actors_Plus[actorid][isdynamic][eapTimerChatBubble])
 			{
 				APD("[Attach3DTextLabelToActor] -> Returned 2 due to a running timer (timerid: %i).", _:Actors_Plus[actorid][isdynamic][eapTimerChatBubble]);
-				return 2;
+				return cellmin;
 			}
 		#else
 			if(Actors_Plus[actorid][isdynamic][eapTimerChatBubble])
 			{
 				APD("[Attach3DTextLabelToActor] -> Returned 2 due to a running timer (timerid: %i).", Actors_Plus[actorid][isdynamic][eapTimerChatBubble]);
-				return 2;
+				return cellmin;
 			}
 		#endif
 		Actors_Plus[actorid][isdynamic][eapLabel] = CreateDynamic3DTextLabel(text, color, Actors_Plus[actorid][isdynamic][eapPosX] + OffsetX, Actors_Plus[actorid][isdynamic][eapPosY] + OffsetY, Actors_Plus[actorid][isdynamic][eapPosZ] + OffsetZ, drawdistance,
@@ -932,23 +1006,21 @@ S->Attach3DTextLabelToActor(actorid, text[], color, Float:OffsetX, Float:OffsetY
 }
 
 // =======================================================================================================================================================================================
-// =======================================================================================================================================================================================
 
 S->ActorHasAttachedLabel(actorid, &bool:name_displayed = false, &bool:text_displayed = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
 	if(!AP_IsValidActor(actorid, isdynamic))
 		return 0;
 
-	if(Actors_Flags[actorid][isdynamic] & HAS_NAME_DISPLAYED)
+	if(ActorHasNameDisplayed(actorid, isdynamic))
 		name_displayed = true;
 
-	if(Actors_Flags[actorid][isdynamic] & HAS_TEXT_DISPLAYED)
+	if(ActorHasTextDisplayed(actorid, isdynamic))
 		text_displayed = true;
 
 	return (Actors_Plus[actorid][isdynamic][eapLabel] != Text3D:INVALID_3DTEXT_ID);
 }
 
-// =======================================================================================================================================================================================
 // =======================================================================================================================================================================================
 
 S->UpdateAttachedActor3DTextLabel(actorid, const text[], color, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
@@ -966,7 +1038,6 @@ S->UpdateAttachedActor3DTextLabel(actorid, const text[], color, bool:isdynamic =
 }
 
 // =======================================================================================================================================================================================
-// =======================================================================================================================================================================================
 
 S->SetActorChatBubble(actorid, text[], color, Float:drawdistance, expiretime, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
@@ -981,7 +1052,7 @@ S->SetActorChatBubble(actorid, text[], color, Float:drawdistance, expiretime, bo
 			new formatted_string[MAX_ACTOR_LABEL_LENGTH*2 + MAX_PLAYER_NAME];
 			strcat(formatted_string, text);
 			if(Actors_Flags[actorid][isdynamic] & HAS_NAME_DISPLAYED)
-				format(formatted_string, sizeof(formatted_string), "%s\n%s", formatted_string, (Actors_Plus[actorid][isdynamic][eapLabelColor] >>> 8), Actors_Plus[actorid][isdynamic][eapName]);
+				format(formatted_string, sizeof(formatted_string), "%s\n%s", formatted_string, (Actors_Plus[actorid][isdynamic][eapLabelNameColor] >>> 8), Actors_Plus[actorid][isdynamic][eapName]);
 
 			if(Actors_Flags[actorid][isdynamic] & HAS_TEXT_DISPLAYED)
 				format(formatted_string, sizeof(formatted_string), "%s\n{%x}%s", formatted_string, (Actors_Plus[actorid][isdynamic][eapLabelColor] >>> 8), Actors_Plus[actorid][isdynamic][eapLabelText]);
@@ -1003,7 +1074,7 @@ S->SetActorChatBubble(actorid, text[], color, Float:drawdistance, expiretime, bo
 			new formatted_string[MAX_ACTOR_LABEL_LENGTH*2 + MAX_PLAYER_NAME];
 			strcat(formatted_string, text);
 			if(Actors_Flags[actorid][isdynamic] & HAS_NAME_DISPLAYED)
-				format(formatted_string, sizeof(formatted_string), "%s\n{%x}%s", formatted_string, (Actors_Plus[actorid][isdynamic][eapLabelColor] >>> 8), Actors_Plus[actorid][isdynamic][eapName]);
+				format(formatted_string, sizeof(formatted_string), "%s\n{%x}%s", formatted_string, (Actors_Plus[actorid][isdynamic][eapLabelNameColor] >>> 8), Actors_Plus[actorid][isdynamic][eapName]);
 
 			if(Actors_Flags[actorid][isdynamic] & HAS_TEXT_DISPLAYED)
 				format(formatted_string, sizeof(formatted_string), "%s\n{%x}%s", formatted_string, (Actors_Plus[actorid][isdynamic][eapLabelColor] >>> 8), Actors_Plus[actorid][isdynamic][eapLabelText]);
@@ -1030,7 +1101,7 @@ S->SetActorChatBubble(actorid, text[], color, Float:drawdistance, expiretime, bo
 		Actors_Plus[actorid][isdynamic][eapTimerChatBubble] = Timer:0;
 		#if !USING_STREAMER
 			if(Actors_Flags[actorid][isdynamic] & HAS_NAME_DISPLAYED)
-				format(formatted_label, sizeof(formatted_label), "{%x}%s", formatted_label, (Actors_Plus[actorid][isdynamic][eapLabelColor] >>> 8), Actors_Plus[actorid][isdynamic][eapName]);
+				format(formatted_label, sizeof(formatted_label), "{%x}%s", (Actors_Plus[actorid][isdynamic][eapLabelNameColor] >>> 8), Actors_Plus[actorid][isdynamic][eapName]);
 
 			if(Actors_Flags[actorid][isdynamic] & HAS_TEXT_DISPLAYED)
 				format(formatted_label, sizeof(formatted_label), "%s\n{%x}%s", formatted_label, (Actors_Plus[actorid][isdynamic][eapLabelColor] >>> 8), Actors_Plus[actorid][isdynamic][eapLabelText]);
@@ -1043,7 +1114,7 @@ S->SetActorChatBubble(actorid, text[], color, Float:drawdistance, expiretime, bo
 
 		#else
 			if(Actors_Flags[actorid][isdynamic] & HAS_NAME_DISPLAYED)
-				format(formatted_label, sizeof(formatted_label), "{%x}%s", formatted_label, (Actors_Plus[actorid][isdynamic][eapLabelColor] >>> 8), Actors_Plus[actorid][isdynamic][eapName]);
+				format(formatted_label, sizeof(formatted_label), "{%x}%s", (Actors_Plus[actorid][isdynamic][eapLabelNameColor] >>> 8), Actors_Plus[actorid][isdynamic][eapName]);
 
 			if(Actors_Flags[actorid][isdynamic] & HAS_TEXT_DISPLAYED)
 				format(formatted_label, sizeof(formatted_label), "%s\n{%x}%s", formatted_label, (Actors_Plus[actorid][isdynamic][eapLabelColor] >>> 8), Actors_Plus[actorid][isdynamic][eapLabelText]);
@@ -1065,7 +1136,7 @@ S->SetActorChatBubble(actorid, text[], color, Float:drawdistance, expiretime, bo
 		Actors_Plus[actorid][isdynamic][eapTimerChatBubble] = 0;
 		#if !USING_STREAMER
 			if(Actors_Flags[actorid][isdynamic] & HAS_NAME_DISPLAYED)
-				format(formatted_label, sizeof(formatted_label), "{%x}%s", formatted_label, (Actors_Plus[actorid][isdynamic][eapLabelColor] >>> 8), Actors_Plus[actorid][isdynamic][eapName]);
+				format(formatted_label, sizeof(formatted_label), "{%x}%s", (Actors_Plus[actorid][isdynamic][eapLabelNameColor] >>> 8), Actors_Plus[actorid][isdynamic][eapName]);
 
 			if(Actors_Flags[actorid][isdynamic] & HAS_TEXT_DISPLAYED)
 				format(formatted_label, sizeof(formatted_label), "%s\n{%x}%s", formatted_label, (Actors_Plus[actorid][isdynamic][eapLabelColor] >>> 8), Actors_Plus[actorid][isdynamic][eapLabelText]);
@@ -1078,7 +1149,7 @@ S->SetActorChatBubble(actorid, text[], color, Float:drawdistance, expiretime, bo
 
 		#else
 			if(Actors_Flags[actorid][isdynamic] & HAS_NAME_DISPLAYED)
-				format(formatted_label, sizeof(formatted_label), "{%x}%s", formatted_label, (Actors_Plus[actorid][isdynamic][eapLabelColor] >>> 8), Actors_Plus[actorid][isdynamic][eapName]);
+				format(formatted_label, sizeof(formatted_label), "{%x}%s", (Actors_Plus[actorid][isdynamic][eapLabelNameColor] >>> 8), Actors_Plus[actorid][isdynamic][eapName]);
 
 			if(Actors_Flags[actorid][isdynamic] & HAS_TEXT_DISPLAYED)
 				format(formatted_label, sizeof(formatted_label), "%s\n{%x}%s", formatted_label, (Actors_Plus[actorid][isdynamic][eapLabelColor] >>> 8), Actors_Plus[actorid][isdynamic][eapLabelText]);
@@ -1091,7 +1162,6 @@ S->SetActorChatBubble(actorid, text[], color, Float:drawdistance, expiretime, bo
 	}
 #endif // #if USING_Y_TIMERS
 
-// =======================================================================================================================================================================================
 // =======================================================================================================================================================================================
 
 S->DestroyActor3DTextLabel(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
@@ -1131,7 +1201,6 @@ S->DestroyActor3DTextLabel(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETE
 	return 1;
 }
 
-// =======================================================================================================================================================================================
 // =======================================================================================================================================================================================
 
 S->ToggleActorName(actorid, bool:toggle, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
@@ -1185,7 +1254,6 @@ S->ToggleActorName(actorid, bool:toggle, bool:isdynamic = DEFAULT_IS_DYNAMIC_PAR
 }
 
 // =======================================================================================================================================================================================
-// =======================================================================================================================================================================================
 
 S->SetActorSkin(actorid, skinid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
@@ -1198,7 +1266,6 @@ S->SetActorSkin(actorid, skinid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 }
 
 // =======================================================================================================================================================================================
-// =======================================================================================================================================================================================
 
 S->IsActorDead(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
@@ -1207,60 +1274,6 @@ S->IsActorDead(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 	return (Actors_Flags[actorid][isdynamic] & IS_DEAD) == IS_DEAD;
 }
 
-// =======================================================================================================================================================================================
-// =======================================================================================================================================================================================
-
-#if !defined GetActorSkin
-	S->GetActorSkin(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
-	{
-		if(!AP_IsValidActor(actorid, isdynamic))
-			return 0;
-		return Actors_Plus[actorid][isdynamic][eapSkin];
-	}
-#endif
-
-// =======================================================================================================================================================================================
-// =======================================================================================================================================================================================
-
-#if USING_STREAMER
-	S->GetDynamicActorInterior(actorid)
-	{
-		if(!IsValidDynamicActor(actorid))
-			return 0;
-		return Actors_Plus[actorid][DYNAMIC_CATEGORY][eapInt];
-	}
-
-	S->SetDynamicActorInterior(actorid, interiorid)
-	{
-		if(!IsValidDynamicActor(actorid))
-			return 0;
-		CallRemoteFunction("OnDynamicActorInteriorChange", "iii", actorid, Actors_Plus[actorid][DYNAMIC_CATEGORY][eapInt], interiorid);
-		Actors_Plus[actorid][DYNAMIC_CATEGORY][eapInt] = interiorid;
-		return RecreateActor(actorid);
-	}
-
-	#define DestroyAllDynamicActors(%0)				Streamer_DestroyAllItems(STREAMER_TYPE_ACTOR, %0)
-	#define CountDynamicActors(%0)					Streamer_CountItems(STREAMER_TYPE_ACTOR, %0)
-	#define UpdateDynamicActorForPlayer(%0)			Streamer_Update(%0, STREAMER_TYPE_ACTOR)
-	#define CountStreamedActorForPlayer(%0,%1)		Streamer_CountVisibleItems(%0, STREAMER_TYPE_ACTOR, %1)
-	#define GetDynamicActorArea(%0)					STREAMER_TAG_AREA Streamer_GetIntData(STREAMER_TYPE_ACTOR, (%0), E_STREAMER_AREA_ID)
-	#define SetDynamicActorArea(%0,%1)				Streamer_SetIntData(STREAMER_TYPE_ACTOR, (%0), E_STREAMER_AREA_ID, STREAMER_TAG_AREA (%1))
-	#define GetDynamicActorPriority(%0)				Streamer_GetIntData(STREAMER_TYPE_ACTOR, (%0), E_STREAMER_PRIORITY)
-	#define SetDynamicActorPriority(%0,%1)			Streamer_SetIntData(STREAMER_TYPE_ACTOR, (%0), E_STREAMER_PRIORITY, (%1))
-	#define GetInternalActorIdForPlayer(%0,%1)		Streamer_GetItemInternalID(%0, STREAMER_TYPE_ACTOR, %1)
-#endif
-
-static S->GetInternalActorIDForPlayer(forplayerid, actorid)
-{
-	#if USING_STREAMER
-		return Streamer_GetItemInternalID(forplayerid, STREAMER_TYPE_ACTOR, actorid);
-	#else
-		#pragma unused forplayerid
-		return actorid;
-	#endif
-}
-
-// =======================================================================================================================================================================================
 // =======================================================================================================================================================================================
 
 S->ActorPlaySound(actorid, soundid, Float:x, Float:y, Float:z, Float:max_range, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
@@ -1346,6 +1359,49 @@ S->ActorPlaySound(actorid, soundid, Float:x, Float:y, Float:z, Float:max_range, 
 	#endif // if USING_STREAMER
 	return 1;
 }
+
+// =======================================================================================================================================================================================
+// =======================================================================================================================================================================================
+
+#if !defined GetActorSkin
+	S->GetActorSkin(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
+	{
+		if(!AP_IsValidActor(actorid, isdynamic))
+			return 0;
+		return Actors_Plus[actorid][isdynamic][eapSkin];
+	}
+#endif
+
+// =======================================================================================================================================================================================
+// =======================================================================================================================================================================================
+
+#if USING_STREAMER
+	S->GetDynamicActorInterior(actorid)
+	{
+		if(!IsValidDynamicActor(actorid))
+			return 0;
+		return Actors_Plus[actorid][DYNAMIC_CATEGORY][eapInt];
+	}
+
+	S->SetDynamicActorInterior(actorid, interiorid)
+	{
+		if(!IsValidDynamicActor(actorid))
+			return 0;
+		CallRemoteFunction("OnDynamicActorInteriorChange", "iii", actorid, Actors_Plus[actorid][DYNAMIC_CATEGORY][eapInt], interiorid);
+		Actors_Plus[actorid][DYNAMIC_CATEGORY][eapInt] = interiorid;
+		return RecreateActor(actorid);
+	}
+
+	#define DestroyAllDynamicActors(%0)				Streamer_DestroyAllItems(STREAMER_TYPE_ACTOR, %0)
+	#define CountDynamicActors(%0)					Streamer_CountItems(STREAMER_TYPE_ACTOR, %0)
+	#define UpdateDynamicActorForPlayer(%0)			Streamer_Update(%0, STREAMER_TYPE_ACTOR)
+	#define CountStreamedActorForPlayer(%0,%1)		Streamer_CountVisibleItems(%0, STREAMER_TYPE_ACTOR, %1)
+	#define GetDynamicActorArea(%0)					STREAMER_TAG_AREA Streamer_GetIntData(STREAMER_TYPE_ACTOR, (%0), E_STREAMER_AREA_ID)
+	#define SetDynamicActorArea(%0,%1)				Streamer_SetIntData(STREAMER_TYPE_ACTOR, (%0), E_STREAMER_AREA_ID, STREAMER_TAG_AREA (%1))
+	#define GetDynamicActorPriority(%0)				Streamer_GetIntData(STREAMER_TYPE_ACTOR, (%0), E_STREAMER_PRIORITY)
+	#define SetDynamicActorPriority(%0,%1)			Streamer_SetIntData(STREAMER_TYPE_ACTOR, (%0), E_STREAMER_PRIORITY, (%1))
+	#define GetInternalActorIdForPlayer(%0,%1)		Streamer_GetItemInternalID(%0, STREAMER_TYPE_ACTOR, %1)
+#endif
 
 // =======================================================================================================================================================================================
 // ================================================================================== Useful functions ===================================================================================
@@ -1649,7 +1705,7 @@ S->HideActorForPlayer(forplayerid, actorid, hide_type, bool:isdynamic = DEFAULT_
 
 	if(!(hide_type & (HIDE_TYPE_PERMANENT | HIDE_TYPE_ONE_TIME)))
 		return cellmin;
-	
+
 	if(hide_type & HIDE_TYPE_NONE)
 		return Internal_BringBackActor(forplayerid, actorid, isdynamic);
 
@@ -2122,6 +2178,55 @@ public OnOutcomingRPC(playerid, rpcid, BitStream:bs)
 // =======================================================================================================================================================================================
 // =======================================================================================================================================================================================
 
+static S->AP_IsValidActor(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
+{
+	if(Actors_Plus[actorid][isdynamic][eapSkin] == -1)
+		return 0;
+
+	#if !USING_STREAMER
+		#if USING_Y_ITERATE
+			if(!Iter_Contains(Actor, actorid) || !IsValidActor(actorid))
+				return 0;
+		#else
+			if(!(0 <= actorid <= MAX_ACTORS) || !(Actors_Flags[actorid][isdynamic] & IS_EXISTING) || !IsValidActor(actorid))
+				return 0;
+		#endif
+		return 1;
+
+	#else
+
+		#if !USING_Y_ITERATE
+			if(!(0 <= actorid <= MAX_ACTORS) || !(Actors_Flags[actorid][isdynamic] & IS_EXISTING))
+				return 0;
+		#endif
+
+		if(!isdynamic)
+		{
+			if(!IsValidActor(actorid))
+				return 0;
+
+			#if USING_Y_ITERATE
+				if(!Iter_Contains(Actor, actorid))
+					return 0;
+			#endif
+		}
+
+		else
+		{
+			if(!IsValidDynamicActor(actorid))
+				return 0;
+
+			#if USING_Y_ITERATE
+				if(!Iter_Contains(Dynamic_Actor, actorid))
+					return 0;
+			#endif
+		}
+		return 1;
+	#endif
+}
+
+// =======================================================================================================================================================================================
+
 static S->Internal_HideAnActorForPlayer(playerid, actorid, bool:isdynamic)
 {
 	if(isdynamic)
@@ -2175,7 +2280,6 @@ static S->Internal_BringBackActor(forplayerid, actorid, bool:isdynamic)
 }
 
 // =======================================================================================================================================================================================
-// =======================================================================================================================================================================================
 
 static S->RecreateActor(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
@@ -2216,60 +2320,7 @@ static S->RecreateActor(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 	#endif
 }
 
-// =======================================================================================================================================================================================
-// =======================================================================================================================================================================================
-
-static S->AP_IsValidActor(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
-{
-	if(Actors_Plus[actorid][isdynamic][eapSkin] == -1)
-		return 0;
-
-	#if !USING_STREAMER
-		#if USING_Y_ITERATE
-			if(!Iter_Contains(Actor, actorid) || !IsValidActor(actorid))
-				return 0;
-		#else
-			if(!(0 <= actorid <= MAX_ACTORS) || !(Actors_Flags[actorid][isdynamic] & IS_EXISTING) || !IsValidActor(actorid))
-				return 0;
-		#endif
-		return 1;
-
-	#else
-
-		#if !USING_Y_ITERATE
-			if(!(0 <= actorid <= MAX_ACTORS) || !(Actors_Flags[actorid][isdynamic] & IS_EXISTING))
-				return 0;
-		#endif
-
-		if(!isdynamic)
-		{
-			if(!IsValidActor(actorid))
-				return 0;
-
-			#if USING_Y_ITERATE
-				if(!Iter_Contains(Actor, actorid))
-					return 0;
-			#endif
-		}
-
-		else
-		{
-			if(!IsValidDynamicActor(actorid))
-				return 0;
-
-			#if USING_Y_ITERATE
-				if(!Iter_Contains(Dynamic_Actor, actorid))
-					return 0;
-			#endif
-		}
-		return 1;
-	#endif
-}
-
-// =======================================================================================================================================================================================
-// =======================================================================================================================================================================================
-
-static stock Format3DActorTextLabel(actorid, bool:name, bool:text, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
+static S->Format3DActorTextLabel(actorid, bool:name, bool:text, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
 	new formatted_label[300];
 	if(name)
@@ -2280,28 +2331,30 @@ static stock Format3DActorTextLabel(actorid, bool:name, bool:text, bool:isdynami
 		if(isnull(formatted_label))
 			strcat(formatted_label, Actors_Plus[actorid][isdynamic][eapLabelText]);
 		else
-			format(formatted_label, sizeof(formatted_label), "%s\n%s", Actors_Plus[actorid][isdynamic][eapName], Actors_Plus[actorid][isdynamic][eapLabelText]);
+			format(formatted_label, sizeof(formatted_label), "{%x}%s\n{%x}%s", Actors_Plus[actorid][isdynamic][eapLabelNameColor] >>> 8, Actors_Plus[actorid][isdynamic][eapName], Actors_Plus[actorid][isdynamic][eapLabelColor] >>> 8, Actors_Plus[actorid][isdynamic][eapLabelText]);
 	}
 	return formatted_label;
 }
 
-static stock Internal_Update3DActorTextLabel(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
+static S->Internal_Update3DActorTextLabel(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
 	#if USING_STREAMER
 
 		if(Actors_Plus[actorid][isdynamic][eapLabel] == Text3D:INVALID_3DTEXT_ID)
-			Attach3DTextLabelToActor(actorid, Format3DActorTextLabel(actorid, !isnull(Actors_Plus[actorid][isdynamic][eapName]) && (Actors_Flags[actorid][isdynamic] & HAS_NAME_DISPLAYED), !isnull(Actors_Plus[actorid][isdynamic][eapLabelText]) && (Actors_Flags[actorid][isdynamic] & HAS_TEXT_DISPLAYED)), isdynamic, Actors_Plus[actorid][isdynamic][eapLabelColor], Actors_Plus[actorid][isdynamic][eapLabelPosX], Actors_Plus[actorid][isdynamic][eapLabelPosY], Actors_Plus[actorid][isdynamic][eapLabelPosZ], Actors_Plus[actorid][isdynamic][eapLabelDrawDistance], .store_string = false);
+			return Attach3DTextLabelToActor(actorid, Format3DActorTextLabel(actorid, !isnull(Actors_Plus[actorid][isdynamic][eapName]) && (Actors_Flags[actorid][isdynamic] & HAS_NAME_DISPLAYED), !isnull(Actors_Plus[actorid][isdynamic][eapLabelText]) && (Actors_Flags[actorid][isdynamic] & HAS_TEXT_DISPLAYED)), isdynamic, Actors_Plus[actorid][isdynamic][eapLabelColor], Actors_Plus[actorid][isdynamic][eapLabelPosX], Actors_Plus[actorid][isdynamic][eapLabelPosY], Actors_Plus[actorid][isdynamic][eapLabelPosZ], Actors_Plus[actorid][isdynamic][eapLabelDrawDistance], .store_string = false);
 		else
-			Update3DTextLabelText(Actors_Plus[actorid][isdynamic][eapLabel], Actors_Plus[actorid][isdynamic][eapLabelColor], Format3DActorTextLabel(actorid, !isnull(Actors_Plus[actorid][isdynamic][eapName]) && (Actors_Flags[actorid][isdynamic] & HAS_NAME_DISPLAYED), !isnull(Actors_Plus[actorid][DYNAMIC_CATEGORY][eapLabelText]) && (Actors_Flags[actorid][isdynamic] & HAS_TEXT_DISPLAYED)));
+			return UpdateDynamic3DTextLabelText(Actors_Plus[actorid][isdynamic][eapLabel], Actors_Plus[actorid][isdynamic][eapLabelColor], Format3DActorTextLabel(actorid, !isnull(Actors_Plus[actorid][isdynamic][eapName]) && (Actors_Flags[actorid][isdynamic] & HAS_NAME_DISPLAYED), !isnull(Actors_Plus[actorid][DYNAMIC_CATEGORY][eapLabelText]) && (Actors_Flags[actorid][isdynamic] & HAS_TEXT_DISPLAYED)));
 	#else
 		if(Actors_Plus[actorid][isdynamic][eapLabel] == Text3D:INVALID_3DTEXT_ID)
-			Attach3DTextLabelToActor(actorid, Format3DActorTextLabel(actorid, !isnull(Actors_Plus[actorid][isdynamic][eapName]) && (Actors_Flags[actorid][isdynamic] & HAS_NAME_DISPLAYED), !isnull(Actors_Plus[actorid][isdynamic][eapLabelText]) && (Actors_Flags[actorid][isdynamic] & HAS_TEXT_DISPLAYED), false), Actors_Plus[actorid][isdynamic][eapLabelColor], Actors_Plus[actorid][DYNAMIC_CATEGORY][eapLabelPosX], Actors_Plus[actorid][DYNAMIC_CATEGORY][eapLabelPosY], Actors_Plus[actorid][DYNAMIC_CATEGORY][eapLabelPosZ], Actors_Plus[actorid][DYNAMIC_CATEGORY][eapLabelDrawDistance], .store_string = false);
+			return Attach3DTextLabelToActor(actorid, Format3DActorTextLabel(actorid, !isnull(Actors_Plus[actorid][isdynamic][eapName]) && (Actors_Flags[actorid][isdynamic] & HAS_NAME_DISPLAYED), !isnull(Actors_Plus[actorid][isdynamic][eapLabelText]) && (Actors_Flags[actorid][isdynamic] & HAS_TEXT_DISPLAYED), false), Actors_Plus[actorid][isdynamic][eapLabelColor], Actors_Plus[actorid][DYNAMIC_CATEGORY][eapLabelPosX], Actors_Plus[actorid][DYNAMIC_CATEGORY][eapLabelPosY], Actors_Plus[actorid][DYNAMIC_CATEGORY][eapLabelPosZ], Actors_Plus[actorid][DYNAMIC_CATEGORY][eapLabelDrawDistance], .store_string = false);
 		else
-			Update3DTextLabelText(Actors_Plus[actorid][isdynamic][eapLabel], Actors_Plus[actorid][isdynamic][eapLabelColor], Format3DActorTextLabel(actorid, !isnull(Actors_Plus[actorid][isdynamic][eapName]) && (Actors_Flags[actorid][isdynamic] & HAS_NAME_DISPLAYED), !isnull(Actors_Plus[actorid][isdynamic][eapLabelText]) && (Actors_Flags[actorid][isdynamic] & HAS_TEXT_DISPLAYED), false));
+			return Update3DTextLabelText(Actors_Plus[actorid][isdynamic][eapLabel], Actors_Plus[actorid][isdynamic][eapLabelColor], Format3DActorTextLabel(actorid, !isnull(Actors_Plus[actorid][isdynamic][eapName]) && (Actors_Flags[actorid][isdynamic] & HAS_NAME_DISPLAYED), !isnull(Actors_Plus[actorid][isdynamic][eapLabelText]) && (Actors_Flags[actorid][isdynamic] & HAS_TEXT_DISPLAYED), false));
 	#endif
 }
 
-static stock ReSynchActor(actorid)
+// =======================================================================================================================================================================================
+
+static S->ReSynchActor(actorid)
 {
 	SetActorPos(actorid, 999.0, 999.0, 999.0);
 	#if USING_Y_TIMERS
@@ -2310,6 +2363,20 @@ static stock ReSynchActor(actorid)
 		SetTimerEx("@AP_ReplaceActor", DEFAULT_ACTOR_REPLACEMENT, 0, "i", actorid);
 	#endif
 }
+
+// =======================================================================================================================================================================================
+
+static S->GetInternalActorIDForPlayer(forplayerid, actorid)
+{
+	#if USING_STREAMER
+		return Streamer_GetItemInternalID(forplayerid, STREAMER_TYPE_ACTOR, actorid);
+	#else
+		#pragma unused forplayerid
+		return actorid;
+	#endif
+}
+
+// =======================================================================================================================================================================================
 
 #if USING_Y_TIMERS
 	timer AP_ReplaceActor[DEFAULT_ACTOR_REPLACEMENT](actorid)
