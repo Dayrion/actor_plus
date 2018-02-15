@@ -3,7 +3,7 @@
 
 		Include started at 19/01/18.
 		-Dayrion
-		Public version - v4.0.0
+		Public version - v4.0.1
 */
 
 
@@ -709,6 +709,12 @@ S->RespawnActor(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 	if(!AP_IsValidActor(actorid, isdynamic))
 		return 0;
 
+	if(Actors_Flags[actorid][isdynamic] & IS_DEAD)
+	{
+		Actors_Plus[actorid][isdynamic][eapHealth] = 100.0;
+		Actors_Flags[actorid][isdynamic] &= ~IS_DEAD;	
+	}
+	
 	RecreateActor(actorid, isdynamic);
 	return 1;
 }
@@ -827,11 +833,11 @@ S->GetActorTextLabel(actorid, text[], length = sizeof(text), bool:isdynamic = DE
 	return 1;
 }
 
-S->GetActorColorLabel(actorid, bool:ToRGBA = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
+S->GetActorColorLabel(actorid, bool:ToRGB = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
 	if(!AP_IsValidActor(actorid, isdynamic))
 		return 0;
-	if(ToRGBA)
+	if(ToRGB)
 		return (Actors_Plus[actorid][isdynamic][eapLabelColor] >>> 8);
 	else
 		return Actors_Plus[actorid][isdynamic][eapLabelColor];
@@ -1367,9 +1373,6 @@ S->IsPlayerInRangeOfActor(playerid, actorid, Float:range = 2.0, bool:isdynamic =
 
 S->IsPlayerAimingActor(playerid, actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
-	if(!IsPlayerConnected(playerid) || !AP_IsValidActor(actorid, isdynamic))
-		return 0;
-
 	#if USING_STREAMER
 		if(isdynamic)
 			return (GetPlayerTargetDynamicActor(playerid) == actorid);
@@ -1644,11 +1647,11 @@ S->HideActorForPlayer(forplayerid, actorid, hide_type, bool:isdynamic = DEFAULT_
 	if(!IsPlayerConnected(forplayerid) || !AP_IsValidActor(actorid, isdynamic))
 		return 0;
 
-	if(!(hide_type & (HIDE_TYPE_PERMANENT | HIDE_TYPE_NONE)))
+	if(!(hide_type & (HIDE_TYPE_PERMANENT | HIDE_TYPE_ONE_TIME)))
 		return cellmin;
-
+	
 	if(hide_type & HIDE_TYPE_NONE)
-		return BringBackActorForPlayer(forplayerid, actorid, isdynamic);
+		return Internal_BringBackActor(forplayerid, actorid, isdynamic);
 
 	Player_Flags[forplayerid][isdynamic][actorid] = Player_Flags[forplayerid][isdynamic][actorid] & ~(HIDE_TYPE_NONE | HIDE_TYPE_PERMANENT | HIDE_TYPE_ONE_TIME) | hide_type;
 	return Internal_HideAnActorForPlayer(forplayerid, actorid, isdynamic);
@@ -1674,7 +1677,7 @@ S->SetActorHideTypeForPlayer(forplayerid, actorid, hide_type, bool:isdynamic = D
 		return cellmin;
 
 	if(hide_type & HIDE_TYPE_NONE)
-		return BringBackActorForPlayer(forplayerid, actorid, isdynamic);
+		return Internal_BringBackActor(forplayerid, actorid, isdynamic);
 
 	Player_Flags[forplayerid][isdynamic][actorid] = Player_Flags[forplayerid][isdynamic][actorid] & ~(HIDE_TYPE_PERMANENT | HIDE_TYPE_ONE_TIME) | hide_type;
 	return 1;
@@ -1749,7 +1752,7 @@ S->ApplyActorAnimationForPlayer(forplayerid, actorid, repeated_animation, animli
 	if(!IsPlayerConnected(forplayerid) || !AP_IsValidActor(actorid, isdynamic))
 		return 0;
 
-	if(!(repeated_animation & (ANIMATION_PLAY_PERMANENT | ANIMATION_PLAY_NONE)))
+	if(!(repeated_animation & (ANIMATION_PLAY_PERMANENT | ANIMATION_PLAY_ONE_TIME)))
 		return cellmin;
 
 	if(repeated_animation & ANIMATION_PLAY_NONE)
@@ -1789,7 +1792,7 @@ S->ApplyActorAnimationForPlayer(forplayerid, actorid, repeated_animation, animli
 
 	if(actorid == INVALID_ACTOR_ID)
 	{
-		APD("[ApplyActorAnimationForPlayer] actorid %i isn't streamed (and so he's dynamic) for player: %i", actorid, forplayerid);
+		APD("[ApplyActorAnimationForPlayer] actorid %i isn't streamed (he's probably dynamic) for player: %i", actorid, forplayerid);
 		return 2;
 	}
 
@@ -1829,7 +1832,7 @@ S->ClearActorAnimationsForPlayer(forplayerid, actorid, bool:isdynamic = DEFAULT_
 	
 	if(actorid == INVALID_ACTOR_ID)
 	{
-		APD("[ClearActorAnimationsForPlayer] actorid %i isn't streamed (and so he's dynamic) for player: %i", actorid, forplayerid);
+		APD("[ClearActorAnimationsForPlayer] actorid %i isn't streamed (he's probably dynamic) for player: %i", actorid, forplayerid);
 		return 2;
 	}
 
@@ -1854,7 +1857,7 @@ S->SetActorPosForPlayer(forplayerid, actorid, fake_position_type, Float:x, Float
 	if(!IsPlayerConnected(forplayerid) || !AP_IsValidActor(actorid, isdynamic))
 		return 0;
 
-	if(!(fake_position_type & (FAKE_POSITION_PERMANENT | FAKE_POSITION_NONE)))
+	if(!(fake_position_type & (FAKE_POSITION_PERMANENT | FAKE_POSITION_ONE_TIME)))
 		return cellmin;
 
 	Player_Flags[forplayerid][isdynamic][actorid] = Player_Flags[forplayerid][isdynamic][actorid] & ~(FAKE_POSITION_NONE | FAKE_POSITION_ONE_TIME | FAKE_POSITION_PERMANENT) | fake_position_type;
@@ -1875,7 +1878,7 @@ S->SetActorPosForPlayer(forplayerid, actorid, fake_position_type, Float:x, Float
 
 	if(actorid == INVALID_ACTOR_ID)
 	{
-		APD("[SetActorPosForPlayer] actorid %i isn't streamed (and so he's dynamic) for player: %i", actorid, forplayerid);
+		APD("[SetActorPosForPlayer] actorid %i isn't streamed (he's probably dynamic) for player: %i", actorid, forplayerid);
 		return 2;
 	}
 
@@ -1907,7 +1910,7 @@ S->BringBackActorPosForPlayer(forplayerid, actorid, bool:isdynamic = DEFAULT_IS_
 
 	if(related_actorid == INVALID_ACTOR_ID)
 	{
-		APD("[BringBackActorPosForPlayer] actorid %i isn't streamed (and so he's dynamic) for player: %i", actorid, forplayerid);
+		APD("[BringBackActorPosForPlayer] actorid %i isn't streamed (he's probably dynamic) for player: %i", actorid, forplayerid);
 		return 2;
 	}
 
@@ -2076,6 +2079,10 @@ public OnOutcomingRPC(playerid, rpcid, BitStream:bs)
 		if(Player_Flags[playerid][isdynamic][actorid] & HIDE_TYPE_PERMANENT)
 		{
 			APD("%i (real id: %i) detected as a permanent hidden actor for playerid: %i", actorid, internal_actorid, playerid);
+			#if USING_STREAMER
+				if(Streamer_IsToggleItem(playerid, STREAMER_TYPE_ACTOR, actorid) && isdynamic)
+					Streamer_ToggleItem(playerid, STREAMER_TYPE_ACTOR, actorid, false);
+			#endif
 			return 0;
 		}
 
@@ -2122,7 +2129,7 @@ static S->Internal_HideAnActorForPlayer(playerid, actorid, bool:isdynamic)
 
 	if(actorid == INVALID_ACTOR_ID)
 	{
-		APD("[Internal_HideAnActorForPlayer] actorid %i isn't streamed (and so he's dynamic) for player: %i", actorid, playerid);
+		APD("[Internal_HideAnActorForPlayer] actorid %i isn't streamed (he's probably dynamic) for player: %i", actorid, playerid);
 		return 2;
 	}
 
@@ -2139,13 +2146,16 @@ static S->Internal_BringBackActor(forplayerid, actorid, bool:isdynamic)
 {
 	APD("[%s] Bringing actor %i for playerid: %i", (isdynamic ? "Dynamic" : "Static"), actorid, forplayerid);
 	Player_Flags[forplayerid][isdynamic][actorid] = Player_Flags[forplayerid][isdynamic][actorid] & ~(HIDE_TYPE_PERMANENT | HIDE_TYPE_ONE_TIME) | HIDE_TYPE_NONE;
-
+	#if USING_STREAMER
+		if(!Streamer_IsToggleItem(forplayerid, STREAMER_TYPE_ACTOR, actorid) && isdynamic)
+			Streamer_ToggleItem(forplayerid, STREAMER_TYPE_ACTOR, actorid, true);
+	#endif
 	if(isdynamic)
 		actorid = GetInternalActorIDForPlayer(forplayerid, actorid);
-
+	APD("Internal actorid is : %i", actorid);
 	if(actorid == INVALID_ACTOR_ID)
 	{
-		APD("[Internal_BringBackActor] actorid %i isn't streamed (and so he's dynamic) for player: %i", actorid, forplayerid);
+		APD("[Internal_BringBackActor] actorid %i isn't streamed (he's probably dynamic) for player: %i", actorid, forplayerid);
 		return 2;
 	}
 
@@ -2507,8 +2517,6 @@ stock AP_CreateActor(modelid, Float:X, Float:Y, Float:Z, Float:Rotation)
 	#endif
 	#if !USING_Y_ITERATE
 		Actors_Flags[actorid][STATIC_CATEGORY] |= IS_EXISTING;
-	#else
-		Iter_Add(Actor, actorid);
 	#endif
 	APD("CreateActor: %i created.", actorid);
 	return actorid;
@@ -2521,7 +2529,6 @@ stock AP_DestroyActor(actorid)
 	#if USING_Y_ITERATE
 		foreach(new i : Player)
 			Player_Flags[i][STATIC_CATEGORY][actorid] = 0;
-		Iter_Remove(Actor, actorid);
 	#else
 		Actors_Flags[actorid][STATIC_CATEGORY] &= ~IS_EXISTING;
 		for(new i, j = GetPlayerPoolSize(); i <= j; i++)
