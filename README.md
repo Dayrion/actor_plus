@@ -1,8 +1,8 @@
 # actor_plus
 An include with a bunch of useful functions and callback for actors.
-Functions returning 1 on success, 0 on failure or cellmin for specific failure. Please, check the wiki for more specific informations.
+Functions returning 1 on success, 2 for specific success, 0 on failure or cellmin for specific failure. Please, check the wiki for more specific informations.
 
-***Actual version:*** *v3.4.1*
+***Actual version:*** *v4.1.2*
 
 ## Documentation
 ### Constant
@@ -20,48 +20,65 @@ Functions returning 1 on success, 0 on failure or cellmin for specific failure. 
 #### Can be redefined
 * `DEFAULT_ACTOR_DRAW_DISTANCE`: Distance that label is displayed | (type: `float`)
 * `MAX_ACTOR_LABEL_LENGTH`: Max length for a text in a label | (type: `integer`)
-* `DEFAULT_ACTOR_COLOR`: Default actor color name | (type: `hexadecimal`)
+* `DEFAULT_ACTOR_COLOR`: Default actor color text | (type: `hexadecimal`)
+* `DEFAULT_ACTOR_COLOR_NAME`: Default actor color name | (type: `hexadecimal`)
 * `DONT_DETECT_OPTA`: You can define it before the include to deactivated `OnPlayerTargetActor` detection (which using timer) | (type: `N/A`)
 * `DEFAULT_TEXT_RANGE_DETECTION`: This allows you to change the distance at which the actor (for `OnPlayerTextNearActor` **only**) is detected | (type: `float`)
 
 ### General functions
 ```pawn
 native RespawnActor(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
-native SetActorName(actorid, actor_name[], bool:display, bool:contain_id = false, bool:reformat_label = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
-native GetActorName(actorid, actor_name[], length = sizeof(actor_name), bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
-native GetActorTextLabel(actorid, text[], length = sizeof(text), bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
-native ActorHasAttachedLabel(actorid, &bool:name_displayed = false, &bool:text_displayed = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
-native UpdateAttachedActor3DTextLabel(actorid, text[], color, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
-native SetActorChatBubble(actorid, const text[], color, Float:drawdistance, expiretime, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
-native DestroyActor3DTextLabel(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
-native ToggleActorName(actorid, bool:toggle, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native SetActorSkin(actorid, skinid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native IsActorDead(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native GetActorSkin(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
+native ActorPlaySound(actorid, soundid, Float:x, Float:y, Float:z, Float:max_range, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
+
+native SetActorName(actorid, actor_name[], bool:display, bool:contain_id = false, bool:reformat_label = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
+native GetActorName(actorid, actor_name[], length = sizeof(actor_name), bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
+native ToggleActorName(actorid, bool:toggle, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
+
+native GetActorTextLabel(actorid, text[], length = sizeof(text), bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
+native GetActorLabelColor(actorid, bool:ToRGB = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER); // output -> RGBA
+native GetActorNameColor(actorid, bool:ToRGB = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER); // output -> RGBA
+native ActorHasAttachedLabel(actorid, &bool:name_displayed = false, &bool:text_displayed = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
+native UpdateAttachedActor3DTextLabel(actorid, text[], color, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
+native DestroyActor3DTextLabel(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
+
+native SetActorChatBubble(actorid, text[], color, Float:drawdistance, expiretime, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 ``` 
 
 ### Functions - Streamer dependency
 ```pawn
 native Attach3DTextLabelToActor(actorid, const text[], bool:isdynamic, color, Float:OffsetX, Float:OffsetY, Float:OffsetZ, Float:drawdistance, testlos = 0, worldid = DEFAULT_ACTOR_VALUE, interiorid = DEFAULT_ACTOR_VALUE, playerid = DEFAULT_ACTOR_VALUE, Float:streamdistance = STREAMER_3D_TEXT_LABEL_SD, areaid = DEFAULT_ACTOR_VALUE, priority = 0, bool:store_string = true);
 
+// Used to get the real internal actor id used by SA-MP
+native GetInternalActorIDForPlayer(forplayerid, actorid);
+
 // In addition to the streamer
 native GetDynamicActorInterior(actorid);
 native SetDynamicActorInterior(actorid, interiorid);
-
-// Used to get the real internal actor id used by SA-MP
-native GetRealActorID(actorid);
+native DestroyAllDynamicActors(serverwide);
+native CountDynamicActors(serverwide);
+native UpdateDynamicActorForPlayer(playerid);
+native CountStreamedActorForPlayer(playerid, serverwide);
+native GetDynamicActorArea(actorid);
+native SetDynamicActorArea(actorid, STREAMER_TAG_AREA areaid);
+native STREAMER_TAG_AREA GetDynamicActorPriority(actorid);
+native SetDynamicActorPriority(actorid, priority);
+native GetInternalActorIdForPlayer(forplayerid, actorid);
 ```
 
 ### Functions - Non-Streamer dependency
 ```pawn
-native Attach3DTextLabelToActor(actorid, const text[], color, Float:OffsetX, Float:OffsetY, Float:OffsetZ, Float:drawdistance, virtualworld = DEFAULT_ACTOR_VALUE, testlos = 0, bool:store_string = true);
+native Attach3DTextLabelToActor(actorid, text[], color, Float:OffsetX, Float:OffsetY, Float:OffsetZ, Float:drawdistance, virtualworld = DEFAULT_ACTOR_VALUE, testlos = 0, bool:store_string = true);
 native SetActorInvulnerable(actorid, invulnerable = true); // Force actor re-stream
+native SetActorVirtualWorld(actorid, vworld); // Force actor re-stream
 ```
 
 ### Useful functions (none include needed)
 ```pawn
 native GetNearestActorForPlayer(playerid, &bool:isdynamic = false, type = SEARCH_TYPE_ALL, bool:return_multiple_target = false);
-native GetNearestActorByCoord(Float:x, Float:y, Float:z, &bool:isdynamic = false, type = SEARCH_TYPE_ALL, bool:return_multiple_target = false);
+native GetNearestActorByCoord(Float:x, Float:y, Float:z, &bool:isdynamic = false, type = SEARCH_TYPE_ALL, bool:return_multiple_target = false, Float:max_range = INVALID_RANGE_ID);
 native Float:GetActorDistanceFromPoint(actorid, Float:x, Float:y, Float:z, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native IsPlayerInRangeOfActor(playerid, actorid, Float:range = 2.0, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native IsPlayerAimingActor(playerid, actorid); // Returning 0 everytime if `DONT_DETECT_OPTA` is defined
@@ -107,6 +124,7 @@ native BringBackActorPosForPlayer(forplayerid, actorid, bool:isdynamic = DEFAULT
 ```pawn
 forward OnPlayerShotActor(playerid, actorid, weaponid, bool:IsDynamicActor);
 forward OnPlayerTargetActor(playerid, actorid, weaponid);
+forward OnPlayerStopTargetActor(playerid, actorid, weaponid);
 forward OnPlayerMakeDamageToActor(playerid, damaged_actorid, Float:amount, weaponid, bodypart, bool:death, bool:IsDynamicActor);
 forward OnActorDeath(actorid, killerid, reason, bool:IsDynamicActor);
 forward OnActorSpawn(actorid, bool:IsDynamicActor);
@@ -119,6 +137,7 @@ forward OnDynamicActorInteriorChange(actorid, oldinterior, newinteriorid);
 ### Explanations
 * `OnPlayerShotActor`: Called when a player shot an actor even if the actor is invulnerable
 * `OnPlayerTargetActor`: Called when a player aim an actor.
+* `OnPlayerStopTargetActor`: Called when a player stop aiming an actor.
 * `OnPlayerMakeDamageToActor`: Called when a player damage an actor with a **firearm**. `bool:death` is set to `true` when the actor will die after processing damage.
 ***Returning 0 to this call prevent applying damage to the actor.***
 * `OnActorDeath`: Called when a actor die. *Set actor's HP to 0 trigger this callback too.*
