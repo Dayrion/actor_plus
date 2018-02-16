@@ -3,7 +3,7 @@
 
 		Include started at 19/01/18.
 		-Dayrion
-		Public version - v4.1.2
+		Public version - v4.1.3
 */
 
 
@@ -1429,9 +1429,6 @@ S->IsPlayerInRangeOfActor(playerid, actorid, Float:range = 2.0, bool:isdynamic =
 
 S->IsPlayerAimingActor(playerid, actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
-	#if defined !DONT_DETECT_OPTA
-		return 0;
-	#endif
 	#if USING_STREAMER
 		if(isdynamic)
 			return (GetPlayerTargetDynamicActor(playerid) == actorid);
@@ -2363,7 +2360,7 @@ static S->ReSynchActor(actorid)
 	#if USING_Y_TIMERS
 		defer AP_ReplaceActor(actorid);
 	#else
-		SetTimerEx("@AP_ReplaceActor", DEFAULT_ACTOR_REPLACEMENT, 0, "i", actorid);
+		SetTimerEx("@AP_ReplaceActor", DEFAULT_ACTOR_REPLACEMENT, false, "i", actorid);
 	#endif
 }
 
@@ -2692,8 +2689,8 @@ stock AP_SetActorFacingAngle(actorid, Float:ang)
 {
 	if(!SetActorFacingAngle(actorid, ang))
 		return 0;
-	ReSynchActor(actorid);
 	Actors_Plus[actorid][STATIC_CATEGORY][eapPosAngle] = ang;
+	ReSynchActor(actorid);
 	return 1;
 }
 

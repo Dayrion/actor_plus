@@ -2,7 +2,7 @@
 An include with a bunch of useful functions and callback for actors.
 Functions returning 1 on success, 2 for specific success, 0 on failure or cellmin for specific failure. Please, check the wiki for more specific informations.
 
-***Actual version:*** *v4.1.2*
+***Actual version:*** *v4.1.3*
 
 ## Documentation
 ### Constant
@@ -61,9 +61,9 @@ native DestroyAllDynamicActors(serverwide);
 native CountDynamicActors(serverwide);
 native UpdateDynamicActorForPlayer(playerid);
 native CountStreamedActorForPlayer(playerid, serverwide);
-native GetDynamicActorArea(actorid);
+native STREAMER_TAG_AREA GetDynamicActorArea(actorid);
 native SetDynamicActorArea(actorid, STREAMER_TAG_AREA areaid);
-native STREAMER_TAG_AREA GetDynamicActorPriority(actorid);
+native GetDynamicActorPriority(actorid);
 native SetDynamicActorPriority(actorid, priority);
 native GetInternalActorIdForPlayer(forplayerid, actorid);
 ```
@@ -73,6 +73,7 @@ native GetInternalActorIdForPlayer(forplayerid, actorid);
 native Attach3DTextLabelToActor(actorid, text[], color, Float:OffsetX, Float:OffsetY, Float:OffsetZ, Float:drawdistance, virtualworld = DEFAULT_ACTOR_VALUE, testlos = 0, bool:store_string = true);
 native SetActorInvulnerable(actorid, invulnerable = true); // Force actor re-stream
 native SetActorVirtualWorld(actorid, vworld); // Force actor re-stream
+native SetActorFacingAngle(actorid, Float:ang); // Force actor re-stream
 ```
 
 ### Useful functions (none include needed)
@@ -81,7 +82,7 @@ native GetNearestActorForPlayer(playerid, &bool:isdynamic = false, type = SEARCH
 native GetNearestActorByCoord(Float:x, Float:y, Float:z, &bool:isdynamic = false, type = SEARCH_TYPE_ALL, bool:return_multiple_target = false, Float:max_range = INVALID_RANGE_ID);
 native Float:GetActorDistanceFromPoint(actorid, Float:x, Float:y, Float:z, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native IsPlayerInRangeOfActor(playerid, actorid, Float:range = 2.0, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
-native IsPlayerAimingActor(playerid, actorid); // Returning 0 everytime if `DONT_DETECT_OPTA` is defined
+native IsPlayerAimingActor(playerid, actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native IsActorInPlayerFacingAngle(playerid, actorid, Float:max_angle = 90.0, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 ```
 
