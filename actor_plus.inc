@@ -1429,6 +1429,9 @@ S->IsPlayerInRangeOfActor(playerid, actorid, Float:range = 2.0, bool:isdynamic =
 
 S->IsPlayerAimingActor(playerid, actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
+	#if defined !DONT_DETECT_OPTA
+		return 0;
+	#endif
 	#if USING_STREAMER
 		if(isdynamic)
 			return (GetPlayerTargetDynamicActor(playerid) == actorid);
