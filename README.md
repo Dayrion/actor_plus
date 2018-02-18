@@ -18,12 +18,12 @@ Functions returning 1 on success, 2 for specific success, 0 on failure or cellmi
 * `DEFAULT_IS_DYNAMIC_PARAMETER`: Set to `true` if streamer is included otherwise, it set to `false`
 
 #### Can be redefined
-* `DEFAULT_ACTOR_DRAW_DISTANCE`: Distance that label is displayed | (type: `float`)
-* `MAX_ACTOR_LABEL_LENGTH`: Max length for a text in a label | (type: `integer`)
-* `DEFAULT_ACTOR_COLOR`: Default actor color text | (type: `hexadecimal`)
-* `DEFAULT_ACTOR_COLOR_NAME`: Default actor color name | (type: `hexadecimal`)
+* `DEFAULT_ACTOR_DRAW_DISTANCE`: Distance that label is displayed | (type: `float` - value: `13.0`)
+* `MAX_ACTOR_LABEL_LENGTH`: Max length for a text in a label | (type: `integer` - value: `60`)
+* `DEFAULT_ACTOR_COLOR`: Default actor color text | (type: `hexadecimal` - value: `0xFFFFFFFF`)
+* `DEFAULT_ACTOR_COLOR_NAME`: Default actor color name | (type: `hexadecimal` - value: `0x6699FFFF`)
 * `DONT_DETECT_OPTA`: You can define it before the include to deactivated `OnPlayerTargetActor` detection (which using timer) | (type: `N/A`)
-* `DEFAULT_TEXT_RANGE_DETECTION`: This allows you to change the distance at which the actor (for `OnPlayerTextNearActor` **only**) is detected | (type: `float`)
+* `DEFAULT_TEXT_RANGE_DETECTION`: This allows you to change the distance at which the actor (for `OnPlayerTextNearActor` **only**) is detected | (type: `float` - value: `3.0`)
 
 ### General functions
 ```pawn
@@ -33,15 +33,17 @@ native IsActorDead(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native GetActorSkin(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native ActorPlaySound(actorid, soundid, Float:x, Float:y, Float:z, Float:max_range, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 
-native SetActorName(actorid, actor_name[], bool:display, bool:contain_id = false, bool:reformat_label = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
+native SetActorName(actorid, const actor_name[], bool:display, bool:contain_id = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native GetActorName(actorid, actor_name[], length = sizeof(actor_name), bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native ToggleActorName(actorid, bool:toggle, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 
 native GetActorTextLabel(actorid, text[], length = sizeof(text), bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native GetActorLabelColor(actorid, bool:ToRGB = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER); // output -> RGBA
 native GetActorNameColor(actorid, bool:ToRGB = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER); // output -> RGBA
+native SetActorLabelColor(actorid, color, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
+native SetActorNameColor(actorid, color, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native ActorHasAttachedLabel(actorid, &bool:name_displayed = false, &bool:text_displayed = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
-native UpdateAttachedActor3DTextLabel(actorid, text[], color, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
+native UpdateAttachedActor3DTextLabel(actorid, const text[], color, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native DestroyActor3DTextLabel(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 
 native SetActorChatBubble(actorid, text[], color, Float:drawdistance, expiretime, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
