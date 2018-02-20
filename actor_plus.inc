@@ -3,7 +3,7 @@
 
 		Include started at 19/01/18.
 		-Dayrion
-		Public version - v4.1.3
+		Public version - v4.1.4
 */
 
 
@@ -17,6 +17,10 @@
 	#error "<actor+> a_samp is not included."
 #endif
 
+#if __Pawn < 0x030A
+	#error "<actor+> You must use the latest Zeex's compiler due to implicite 4D arrays - Download: https://github.com/pawn-lang/compiler/releases"
+#endif
+
 #if defined AP_DEBUG_ENABLED
 	#define APD(%0) printf("<actor+> "%0)
 #else
@@ -27,15 +31,13 @@
 
 #if defined _streamer_included
 	#if !defined GetDynamicActorAnimation
-		#if __Pawn >= 0x030A
-			#warning "<actor+> Streamer version is not up to date. actor+ won't use it"
-		#endif
+		#warning "<actor+> Streamer version is not up to date. actor+ won't use it"
 		#define USING_STREAMER (0)
 		#define DEFAULT_IS_DYNAMIC_PARAMETER (false)
 	#else
 		#define USING_STREAMER (1)
 		#define DEFAULT_IS_DYNAMIC_PARAMETER (true)
-		#if defined AP_DEBUG_ENABLED && __Pawn >= 0x030A
+		#if defined AP_DEBUG_ENABLED
 			#warning "<actor+> Using streamer"
 		#endif
 	#endif
@@ -48,7 +50,7 @@
 
 #if defined _inc_y_iterate
 	#define USING_Y_ITERATE (1)
-	#if defined AP_DEBUG_ENABLED && __Pawn >= 0x030A
+	#if defined AP_DEBUG_ENABLED
 		#warning "<actor+> Using y_iterate"
 	#endif
 #else
@@ -59,7 +61,7 @@
 
 #if defined YSI_timer && defined defer
 	#define USING_Y_TIMERS (1)
-	#if defined AP_DEBUG_ENABLED && __Pawn >= 0x030A
+	#if defined AP_DEBUG_ENABLED
 		#warning "<actor+> Using y_timers"
 	#endif
 #else
@@ -70,7 +72,7 @@
 
 #if defined PAWNRAKNET_INC_
 	#define USING_PAWN_RAKNET (1)
-	#if defined AP_DEBUG_ENABLED && __Pawn >= 0x030A
+	#if defined AP_DEBUG_ENABLED
 		#warning "<actor+> Using pawn_raknet"
 	#endif
 #else
@@ -112,7 +114,7 @@ enum _:E_TYPE_SEARCH(<<= 1)
 #if !defined DONT_DETECT_OPTA
 	#define DEFAULT_CHECKING_TIME 	(200)
 #else
-	#if defined AP_DEBUG_ENABLED && __Pawn >= 0x030A
+	#if defined AP_DEBUG_ENABLED
 		#warning "<actor+> OnPlayerTargetActor is unavailable (from DONT_DETECT_OPTA)"
 	#endif
 #endif
@@ -172,7 +174,7 @@ enum _:E_TYPE_SEARCH(<<= 1)
 #endif
 
 #if defined OnPlayerStreamForActor
-	#if !USING_PAWN_RAKNET && __Pawn >= 0x030A
+	#if !USING_PAWN_RAKNET
 		#warning "<actor+> Pawn RakNet isn't included ; OnPlayerStreamForActor(...) won't be called."
 	#endif
 	forward OnPlayerStreamForActor(forplayerid, actorid, actor_flags, bool:IsDynamicActor);
