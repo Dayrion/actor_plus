@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # actor_plus
 An include with a bunch of useful functions and callback for actors.
 Functions returning 1 on success, 2 for specific success, 0 on failure or cellmin for specific failure. Please, check the wiki for more specific informations.
