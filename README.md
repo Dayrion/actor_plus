@@ -2,7 +2,7 @@
 An include with a bunch of useful functions and callback for actors.
 Functions returning 1 on success, 2 for specific success, 0 on failure or cellmin for specific failure. Please, check the wiki for more specific informations.
 
-***Actual version:*** *v4.1.4*
+***Actual version:*** *v5.0.0*
 
 ## Documentation
 ### Constant
@@ -33,15 +33,16 @@ native IsActorDead(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native GetActorSkin(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native ActorPlaySound(actorid, soundid, Float:x, Float:y, Float:z, Float:max_range, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 
-native SetActorName(actorid, const actor_name[], bool:display, bool:contain_id = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
+native SetActorName(actorid, const actor_name[], bool:display, color = DEFAULT_ACTOR_COLOR_NAME, bool:contain_id = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
+native RemoveActorName(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native GetActorName(actorid, actor_name[], length = sizeof(actor_name), bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native ToggleActorName(actorid, bool:toggle, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
+native SetActorNameColor(actorid, color, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
+native GetActorLabelColor(actorid, bool:ToRGB = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER); // output -> RGBA
 
 native GetActorTextLabel(actorid, text[], length = sizeof(text), bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
-native GetActorLabelColor(actorid, bool:ToRGB = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER); // output -> RGBA
 native GetActorNameColor(actorid, bool:ToRGB = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER); // output -> RGBA
 native SetActorLabelColor(actorid, color, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
-native SetActorNameColor(actorid, color, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native ActorHasAttachedLabel(actorid, &bool:name_displayed = false, &bool:text_displayed = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native UpdateAttachedActor3DTextLabel(actorid, const text[], color, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native DestroyActor3DTextLabel(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
@@ -86,6 +87,12 @@ native Float:GetActorDistanceFromPoint(actorid, Float:x, Float:y, Float:z, bool:
 native IsPlayerInRangeOfActor(playerid, actorid, Float:range = 2.0, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native IsPlayerAimingActor(playerid, actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native IsActorInPlayerFacingAngle(playerid, actorid, Float:max_angle = 90.0, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
+
+native GetActorSpawnInfo(actorid, &skinid, &Float:fX, &Float:fY, &Float:fZ, &Float:fAngle, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
+native GetActorAnimationName(actorid, animlib[], size_animlib = sizeof(animlib), animname[], size_animname = sizeof(animname)); // Static actors only
+native GetActorAnimation(actorid, animlib[], size_animlib = sizeof(animlib), animname[], size_animname = sizeof(animname), &Float:fDelta, &loop, &lockx, &locky, &freeze, &time); // Static actors only
+native ToggleActorAnimationLoop(actorid, bool:toggle); // Static actors only
+native bool:IsActorPlayingAnimation(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 ```
 
 #### Type of research:
@@ -103,7 +110,7 @@ native RemoveAllHiddenActorForPlayer(playerid);
 native ApplyActorAnimationForPlayer(forplayerid, actorid, repeated_animation, animlib[], animname[], Float:fDelta, loop, lockx, locky, freeze, time, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native ClearActorAnimationsForPlayer(forplayerid, actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 
-native SetActorPosForPlayer(forplayerid, actorid, fake_position_type, Float:x, Float:y, Float:z, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
+native SetActorPosForPlayer(forplayerid, actorid, fake_position_type, Float:x, Float:y, Float:z, Float:angle, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native BringBackActorPosForPlayer(forplayerid, actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 ```
 
