@@ -2,7 +2,7 @@
 An include with a bunch of useful functions and callback for actors.
 Functions returning 1 on success, 2 for specific success, 0 on failure or cellmin for specific failure. Please, check the wiki for more specific informations.
 
-***Actual version:*** *v5.0.1*
+***Actual version:*** *v5.0.2*
 
 ## Documentation
 ### Constant
@@ -10,7 +10,6 @@ Functions returning 1 on success, 2 for specific success, 0 on failure or cellmi
 * `MULTIPLE_TARGET_FOUND`: Returned by `GetNearestActorForPlayer` or `GetNearestActorByCoord` when multiple actors are found and when `return_multiple_target` is set to `true`
 * `DEFAULT_ACTOR_VALUE`: Using this one instead of any other value result taking the value from the actor
 * `DEFAULT_CHECKING_TIME`: Used to detect `OnPlayerTargetActor`
-* `ALL_VALUES_INCLUDED`: If `ALL_VALUES_INCLUDED` is returned by a function, it means it will appear at every stage (like interior or virtual world)
 * `DEFAULT_ACTOR_REPLACEMENT`: Time before an actor is being re-placed at his old position.
 * `AP_DEBUG_ENABLED`: If some debugs printed messages are needed
 * `MAX_ANIMATION_LIBRARY_LENGTH`: Maximum animation library length name
