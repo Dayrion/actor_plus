@@ -2,7 +2,7 @@
 An include with a bunch of useful functions and callback for actors.
 Functions returning 1 on success, 2 for specific success, 0 on failure or cellmin for specific failure. Please, check the wiki for more specific informations.
 
-***Actual version:*** *v5.0.0*
+***Actual version:*** *v5.0.1*
 
 ## Documentation
 ### Constant
@@ -25,6 +25,15 @@ Functions returning 1 on success, 2 for specific success, 0 on failure or cellmi
 * `DONT_DETECT_OPTA`: You can define it before the include to deactivated `OnPlayerTargetActor` detection (which using timer) | (type: `N/A`)
 * `DEFAULT_TEXT_RANGE_DETECTION`: This allows you to change the distance at which the actor (for `OnPlayerTextNearActor` **only**) is detected | (type: `float` - value: `3.0`)
 
+#### Force disabling include
+You can force disabling include by using these constants:
+```pawn
+#define FORCE_DISABLED_Y_ITERATE
+#define FORCE_DISABLED_Y_TIMERS
+#define FORCE_DISABLED_PAWNRAKNET
+#define FORCE_DISABLED_STREAMER
+```
+
 ### General functions
 ```pawn
 native RespawnActor(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
@@ -33,7 +42,7 @@ native IsActorDead(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native GetActorSkin(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native ActorPlaySound(actorid, soundid, Float:x, Float:y, Float:z, Float:max_range, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 
-native SetActorName(actorid, const actor_name[], bool:display, color = DEFAULT_ACTOR_COLOR_NAME, bool:contain_id = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
+native SetActorName(actorid, actor_name[], bool:display, color = DEFAULT_ACTOR_COLOR_NAME, bool:contain_id = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native RemoveActorName(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native GetActorName(actorid, actor_name[], length = sizeof(actor_name), bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 native ToggleActorName(actorid, bool:toggle, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);

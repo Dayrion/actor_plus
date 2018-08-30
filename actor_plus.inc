@@ -2,8 +2,9 @@
 	actor+
 
 		Include started at 19/01/18.
+		Las update: 30/08/18
 		-Dayrion
-		Public version - v5.0.0
+		Public version - v5.0.1
 */
 
 
@@ -13,12 +14,12 @@
 	#define _actor_plus_included
 #endif
 
-#if !defined _samp_included
-	#error "<actor+> a_samp is not included."
-#endif
-
 #if __Pawn < 0x030A
 	#error "<actor+> You must use the latest Zeex's compiler due to implicite 4D arrays - Download: https://github.com/pawn-lang/compiler/releases"
+#endif
+
+#if !defined _samp_included
+	#error "<actor+> a_samp is not included."
 #endif
 
 #if defined AP_DEBUG_ENABLED
@@ -29,7 +30,7 @@
 
 // =====================================================================================
 
-#if defined _streamer_included
+#if defined _streamer_included && !defined FORCE_DISABLED_STREAMER
 	#if !defined GetDynamicActorAnimation
 		#warning "<actor+> Streamer version is not up to date. actor+ won't use it"
 		#define USING_STREAMER (0)
@@ -48,7 +49,7 @@
 
 // =====================================================================================
 
-#if defined _inc_y_iterate
+#if defined _inc_y_iterate && !defined FORCE_DISABLED_Y_ITERATE
 	#define USING_Y_ITERATE (1)
 	#if defined AP_DEBUG_ENABLED
 		#warning "<actor+> Using y_iterate"
@@ -59,7 +60,7 @@
 
 // =====================================================================================
 
-#if defined YSI_timer && defined defer
+#if defined YSI_timer && defined defer && !defined FORCE_DISABLED_Y_TIMER
 	#define USING_Y_TIMERS (1)
 	#if defined AP_DEBUG_ENABLED
 		#warning "<actor+> Using y_timers"
@@ -70,7 +71,7 @@
 
 // =====================================================================================
 
-#if defined PAWNRAKNET_INC_
+#if defined PAWNRAKNET_INC_ && !defined FORCE_DISABLED_PAWNRAKNET
 	#define USING_PAWN_RAKNET (1)
 	#if defined AP_DEBUG_ENABLED
 		#warning "<actor+> Using pawn_raknet"
@@ -781,7 +782,7 @@ S->RespawnActor(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 
 // =======================================================================================================================================================================================
 
-S->SetActorName(actorid, const actor_name[], bool:display, color = DEFAULT_ACTOR_COLOR_NAME, bool:contain_id = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
+S->SetActorName(actorid, actor_name[], bool:display, color = DEFAULT_ACTOR_COLOR_NAME, bool:contain_id = false, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
 	if(!(3 <= strlen(actor_name) <= 24))
 		return cellmin;
@@ -1026,13 +1027,13 @@ S->Attach3DTextLabelToActor(actorid, text[], color, Float:OffsetX, Float:OffsetY
 		#if USING_Y_TIMERS
 			if(_:Actors_Plus[actorid][STATIC_CATEGORY][eapTimerChatBubble])
 			{
-				APD("[Attach3DTextLabelToActor] -> Returned 2 due to a running timer (timerid: %i).", Actors_Plus[actorid][STATIC_CATEGORY][eapTimerChatBubble]);
+				APD("[Attach3DTextLabelToActor] -> Returned 2 due to a running timer (timerid: %i).", _:Actors_Plus[actorid][STATIC_CATEGORY][eapTimerChatBubble]);
 				return cellmin;
 			}
 		#else
 			if(Actors_Plus[actorid][STATIC_CATEGORY][eapTimerChatBubble])
 			{
-				APD("[Attach3DTextLabelToActor] -> Returned 2 due to a running timer (timerid: %i).", Actors_Plus[actorid][STATIC_CATEGORY][eapTimerChatBubble]);
+				APD("[Attach3DTextLabelToActor] -> Returned 2 due to a running timer (timerid: %i).", _:Actors_Plus[actorid][STATIC_CATEGORY][eapTimerChatBubble]);
 				return cellmin;
 			}
 		#endif
@@ -1468,16 +1469,59 @@ S->ActorPlaySound(actorid, soundid, Float:x, Float:y, Float:z, Float:max_range, 
 	#define GetDynamicActorPriority(%0)				Streamer_GetIntData(STREAMER_TYPE_ACTOR, (%0), E_STREAMER_PRIORITY)
 	#define SetDynamicActorPriority(%0,%1)			Streamer_SetIntData(STREAMER_TYPE_ACTOR, (%0), E_STREAMER_PRIORITY, (%1))
 	#define GetInternalActorIdForPlayer(%0,%1)		Streamer_GetItemInternalID(%0, STREAMER_TYPE_ACTOR, %1)
-	#define CountAllActors() 						(Iter_Count(Static_Actor) + Iter_Count(Dynamic_Actor))
-#else
-	#define CountAllActors() 						(Iter_Count(Static_Actor))
+	#if USING_Y_ITERATE
+		#define CountAllActors() 						(Iter_Count(Actor) + Iter_Count(Dynamic_Actor))
+	#else
+		S->CountAllActors()
+		{
+			new count;
+			for(new i, j = GetActorPoolSize(); i <= j; i++)
+			{
+				if(!(Actors_Flags[i][STATIC_CATEGORY] & IS_EXISTING))
+					continue;
+				count ++;
+			}
+			return (count + Streamer_CountItems(STREAMER_TYPE_ACTOR, 0));
+		}
+	#endif
+#else 
+	#if USING_Y_ITERATE
+		#define CountAllActors() 						(Iter_Count(Actor))
+	#else
+		S->CountAllActors()
+		{
+			new count;
+			for(new i, j = GetActorPoolSize(); i <= j; i++)
+			{
+				if(!(Actors_Flags[i][STATIC_CATEGORY] & IS_EXISTING))
+					continue;
+				count ++;
+			}
+			return count;
+		}
+	#endif
 #endif
 
 // =======================================================================================================================================================================================
 // ================================================================================== Useful functions ===================================================================================
 // =======================================================================================================================================================================================
 
-#define CountStaticActors() (Iter_Count(Static_Actor))
+#if USING_Y_ITERATE
+	#define CountStaticActors() (Iter_Count(Actor))
+#else
+	S->CountStaticActors()
+	{
+		new count;
+		for(new i, j = GetActorPoolSize(); i <= j; i++)
+		{
+			if(!(Actors_Flags[i][STATIC_CATEGORY] & IS_EXISTING))
+				continue;
+			count ++;
+		}
+		return count;
+	}
+#endif
+
 
 S->Float:GetActorDistanceFromPoint(actorid, Float:x, Float:y, Float:z, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER)
 {
