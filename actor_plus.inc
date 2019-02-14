@@ -2,7 +2,7 @@
 	actor+
 
 		Include started at 19/01/18.
-		Las update: 30/08/18
+		Last update: 30/08/18
 		-Dayrion
 		Public version - v5.0.2
 */
