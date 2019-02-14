@@ -207,7 +207,7 @@ enum E_ACTOR_PLUS_DATA
 	eapInt,
 	eapPlayerid,
 	Float:eapStreamDistance,
-	STREAMER_TAG_AREA eapAreaid,
+	STREAMER_TAG_AREA:eapAreaid,
 	eapPriority,
 	#endif
 
@@ -419,7 +419,7 @@ public OnPlayerGiveDamageActor(playerid, damaged_actorid, Float:amount, weaponid
 
 #if USING_STREAMER
 
-public OnPlayerGiveDamageDynamicActor(playerid, STREAMER_TAG_ACTOR actorid, Float:amount, weaponid, bodypart)
+public OnPlayerGiveDamageDynamicActor(playerid, STREAMER_TAG_ACTOR:actorid, Float:amount, weaponid, bodypart)
 {
 	new 
 		Float:fOriginX, Float:fOriginY, Float:fOriginZ,
@@ -481,7 +481,7 @@ public OnPlayerGiveDamageDynamicActor(playerid, STREAMER_TAG_ACTOR actorid, Floa
 #endif
 #define OnPlayerGiveDamageDynamicActor OnPlayerGiveDamageDynamicActorA
 #if defined OnPlayerGiveDamageDynamicActorA
-	forward OnPlayerGiveDamageDynamicActorA(playerid, STREAMER_TAG_ACTOR actorid, Float:amount, weaponid, bodypart);
+	forward OnPlayerGiveDamageDynamicActorA(playerid, STREAMER_TAG_ACTOR:actorid, Float:amount, weaponid, bodypart);
 #endif
 
 #endif // #if USING_STREAMER
@@ -1459,8 +1459,8 @@ stock ActorPlaySound(actorid, soundid, Float:x, Float:y, Float:z, Float:max_rang
 	#define CountDynamicActors(%0)					Streamer_CountItems(STREAMER_TYPE_ACTOR, %0)
 	#define UpdateDynamicActorForPlayer(%0)			Streamer_Update(%0, STREAMER_TYPE_ACTOR)
 	#define CountStreamedActorForPlayer(%0,%1)		Streamer_CountVisibleItems(%0, STREAMER_TYPE_ACTOR, %1)
-	#define GetDynamicActorArea(%0)					STREAMER_TAG_AREA Streamer_GetIntData(STREAMER_TYPE_ACTOR, (%0), E_STREAMER_AREA_ID)
-	#define SetDynamicActorArea(%0,%1)				Streamer_SetIntData(STREAMER_TYPE_ACTOR, (%0), E_STREAMER_AREA_ID, STREAMER_TAG_AREA (%1))
+	#define GetDynamicActorArea(%0)					STREAMER_TAG_AREA:Streamer_GetIntData(STREAMER_TYPE_ACTOR, (%0), E_STREAMER_AREA_ID)
+	#define SetDynamicActorArea(%0,%1)				Streamer_SetIntData(STREAMER_TYPE_ACTOR, (%0), E_STREAMER_AREA_ID, STREAMER_TAG_AREA:(%1))
 	#define GetDynamicActorPriority(%0)				Streamer_GetIntData(STREAMER_TYPE_ACTOR, (%0), E_STREAMER_PRIORITY)
 	#define SetDynamicActorPriority(%0,%1)			Streamer_SetIntData(STREAMER_TYPE_ACTOR, (%0), E_STREAMER_PRIORITY, (%1))
 	#define GetInternalActorIdForPlayer(%0,%1)		Streamer_GetItemInternalID(%0, STREAMER_TYPE_ACTOR, %1)
@@ -2601,7 +2601,7 @@ static stock GetInternalActorIDForPlayer(forplayerid, actorid)
 
 #if USING_STREAMER
 
-	stock AP_CreateDynamicActor(modelid, Float:x, Float:y, Float:z, Float:r, invulnerable = 1, Float:health = 100.0, worldid = -1, interiorid = -1, playerid = -1, Float:streamdistance = STREAMER_ACTOR_SD, STREAMER_TAG_AREA areaid = STREAMER_TAG_AREA -1, priority = 0)
+	stock AP_CreateDynamicActor(modelid, Float:x, Float:y, Float:z, Float:r, invulnerable = 1, Float:health = 100.0, worldid = -1, interiorid = -1, playerid = -1, Float:streamdistance = STREAMER_ACTOR_SD, STREAMER_TAG_AREA:areaid = STREAMER_TAG_AREA:-1, priority = 0)
 	{
 		new actorid;
 		actorid = CreateDynamicActor(modelid, x, y, z, r, invulnerable, health, worldid, interiorid, playerid, streamdistance, areaid, priority);
@@ -2645,7 +2645,7 @@ static stock GetInternalActorIDForPlayer(forplayerid, actorid)
 	#define CreateDynamicActor AP_CreateDynamicActor
 
 
-	stock AP_CreateDynamicActorEx(modelid, Float:x, Float:y, Float:z, Float:r, invulnerable = 1, Float:health = 100.0, Float:streamdistance = STREAMER_ACTOR_SD, worlds[] = { -1 }, interiors[] = { -1 }, players[] = { -1 }, STREAMER_TAG_AREA areas[] = { STREAMER_TAG_AREA -1 }, priority = 0, maxworlds = sizeof worlds, maxinteriors = sizeof interiors, maxplayers = sizeof players, maxareas = sizeof areas)
+	stock AP_CreateDynamicActorEx(modelid, Float:x, Float:y, Float:z, Float:r, invulnerable = 1, Float:health = 100.0, Float:streamdistance = STREAMER_ACTOR_SD, worlds[] = { -1 }, interiors[] = { -1 }, players[] = { -1 }, STREAMER_TAG_AREA:areas[] = { STREAMER_TAG_AREA:-1 }, priority = 0, maxworlds = sizeof worlds, maxinteriors = sizeof interiors, maxplayers = sizeof players, maxareas = sizeof areas)
 	{
 		new actorid;
 		actorid = CreateDynamicActorEx(modelid, x, y, z, r, invulnerable, health, streamdistance, worlds, interiors, players, areas, priority, maxworlds, maxinteriors, maxplayers, maxareas);
@@ -2672,7 +2672,7 @@ static stock GetInternalActorIDForPlayer(forplayerid, actorid)
 		Actors_Plus[actorid][DYNAMIC_CATEGORY][eapInt] = -1;
 		Actors_Plus[actorid][DYNAMIC_CATEGORY][eapPlayerid] = -1;
 		Actors_Plus[actorid][DYNAMIC_CATEGORY][eapStreamDistance] = streamdistance;
-		Actors_Plus[actorid][DYNAMIC_CATEGORY][eapAreaid] = STREAMER_TAG_AREA -1;
+		Actors_Plus[actorid][DYNAMIC_CATEGORY][eapAreaid] = STREAMER_TAG_AREA:-1;
 		Actors_Plus[actorid][DYNAMIC_CATEGORY][eapPriority] = priority;
 		Actors_Plus[actorid][DYNAMIC_CATEGORY][eapLabel] = Text3D:INVALID_3DTEXT_ID;
 		
@@ -2688,7 +2688,7 @@ static stock GetInternalActorIDForPlayer(forplayerid, actorid)
 	#endif
 	#define CreateDynamicActorEx AP_CreateDynamicActorEx
 
-	stock AP_DestroyDynamicActor(STREAMER_TAG_ACTOR actorid)
+	stock AP_DestroyDynamicActor(STREAMER_TAG_ACTOR:actorid)
 	{
 		DestroyActor3DTextLabel(actorid, true);
 		APD("Dynamic actorid %i has been destroyed.", actorid);
@@ -2717,7 +2717,7 @@ static stock GetInternalActorIDForPlayer(forplayerid, actorid)
 	#define DestroyDynamicActor AP_DestroyDynamicActor
 
 
-	stock AP_SetDynamicActorHealth(STREAMER_TAG_ACTOR actorid, Float:health)
+	stock AP_SetDynamicActorHealth(STREAMER_TAG_ACTOR:actorid, Float:health)
 	{
 		if(!IsValidDynamicActor(actorid))
 			return 0;
@@ -2743,7 +2743,7 @@ static stock GetInternalActorIDForPlayer(forplayerid, actorid)
 	#endif
 	#define SetDynamicActorHealth AP_SetDynamicActorHealth
 
-	stock AP_SetDynamicActorInvulnerable(STREAMER_TAG_ACTOR actorid, invulnerable = 1)
+	stock AP_SetDynamicActorInvulnerable(STREAMER_TAG_ACTOR:actorid, invulnerable = 1)
 	{
 		if(!SetDynamicActorInvulnerable(actorid, invulnerable))
 			return 0;
