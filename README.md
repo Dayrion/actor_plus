@@ -2,7 +2,7 @@
 An include with a bunch of useful functions and callback for actors.
 Functions returning 1 on success, 2 for specific success, 0 on failure or cellmin for specific failure. Please, check the wiki for more specific informations.
 
-***Actual version:*** *v5.0.2*
+***Actual version:*** *v5.0.3*
 
 ## Documentation
 ### Constant
@@ -56,7 +56,7 @@ native UpdateAttachedActor3DTextLabel(actorid, const text[], color, bool:isdynam
 native DestroyActor3DTextLabel(actorid, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
 
 native SetActorChatBubble(actorid, text[], color, Float:drawdistance, expiretime, bool:isdynamic = DEFAULT_IS_DYNAMIC_PARAMETER);
-``` 
+```
 
 ### Functions - Streamer dependency
 ```pawn
@@ -72,8 +72,8 @@ native DestroyAllDynamicActors(serverwide);
 native CountDynamicActors(serverwide);
 native UpdateDynamicActorForPlayer(playerid);
 native CountStreamedActorForPlayer(playerid, serverwide);
-native STREAMER_TAG_AREA GetDynamicActorArea(actorid);
-native SetDynamicActorArea(actorid, STREAMER_TAG_AREA areaid);
+native STREAMER_TAG_AREA:GetDynamicActorArea(actorid);
+native SetDynamicActorArea(actorid, STREAMER_TAG_AREA:areaid);
 native GetDynamicActorPriority(actorid);
 native SetDynamicActorPriority(actorid, priority);
 native GetInternalActorIdForPlayer(forplayerid, actorid);
@@ -165,7 +165,7 @@ forward OnDynamicActorInteriorChange(actorid, oldinterior, newinteriorid);
 * `OnActorSpawn`: Called when a player spawn (is created).
 * `OnPlayerStreamForActor`: Called when a player stream **IN** an actor even if the actor is hidden for the player.
 ***Important: actor_flags should be used with different flags type defined below***
-* `OnActorVirtualWorldChange`: Called when a virtualworld is set to an actor 
+* `OnActorVirtualWorldChange`: Called when a virtualworld is set to an actor
 * `OnPlayerTextNearActor`: Called when a player chat near an actor
 * `OnDynamicActorInteriorChange`: Called when an interior is set to a dynamic actor
 
